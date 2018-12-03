@@ -92,13 +92,15 @@ def after_experiment_control(context: Experiment, state: Journal, **kwargs):
     """
     tracer = local.tracer
     span = tracer.experiment_span
-    tracer.experiment_span = None
-    if not span:
-        return
+    try:
+        if not span:
+            return
 
-    status = state.get("status")
-    span.set_tag('status', status)
-    span.finish()
+        status = state.get("status")
+        span.set_tag('status', status)
+    finally:
+        tracer.experiment_span = None
+        span.finish()
 
 
 def before_hypothesis_control(context: Hypothesis, **kwargs):
@@ -122,17 +124,22 @@ def after_hypothesis_control(context: Hypothesis, state: Dict[str, Any],
     """
     tracer = local.tracer
     span = tracer.hypothesis_span
-    tracer.hypothesis_span = None
-    deviated = not state.get("steady_state_met")
-    span.set_tag('deviated', deviated)
-    if deviated and "probes" in state:
-        deviated_probe = state["probes"][-1]
-        span.log_kv({
-            "probe": deviated_probe["activity"]["name"],
-            "expected": deviated_probe["activity"]["tolerance"],
-            "computed": deviated_probe["output"]
-        })
-    span.finish()
+    if not tracer.hypothesis_span:
+        return
+
+    try:
+        deviated = not state.get("steady_state_met")
+        span.set_tag('deviated', deviated)
+        if deviated and "probes" in state:
+            deviated_probe = state["probes"][-1]
+            span.log_kv({
+                "probe": deviated_probe["activity"]["name"],
+                "expected": deviated_probe["activity"]["tolerance"],
+                "computed": deviated_probe["output"]
+            })
+    finally:
+        tracer.hypothesis_span = None
+        span.finish()
 
 
 def before_method_control(context: Experiment, **kwargs):
@@ -154,8 +161,9 @@ def after_method_control(context: Experiment, state: List[Run], **kwargs):
     Finishes the span created when the method began
     """
     tracer = local.tracer
-    tracer.method_span.finish()
-    tracer.method_span = None
+    if tracer.method_span:
+        tracer.method_span.finish()
+        tracer.method_span = None
 
 
 def before_rollback_control(context: Experiment, **kwargs):
@@ -177,8 +185,9 @@ def after_rollback_control(context: Experiment, state: List[Run], **kwargs):
     Finishes the span created when the rollback began
     """
     tracer = local.tracer
-    tracer.rollback_span.finish()
-    tracer.rollback_span = None
+    if tracer.rollback_span:
+        tracer.rollback_span.finish()
+        tracer.rollback_span = None
 
 
 def before_activity_control(context: Activity, **kwargs):
@@ -218,31 +227,32 @@ def after_activity_control(context: Activity, state: Run, **kwargs):
     """
     tracer = local.tracer
     span = tracer.activity_span
-    tracer.activity_span = None
+    try:
+        # special treatment for HTTP activities
+        # we inject the status code of the HTTP response
+        provider = context["provider"]
+        if provider["type"] == "http":
+            output = state.get("output")
+            if isinstance(output, dict):
+                status = output.get("status")
+                if status is not None:
+                    span.set_tag('http.status_code', status)
 
-    # special treatment for HTTP activities
-    # we inject the status code of the HTTP response
-    provider = context["provider"]
-    if provider["type"] == "http":
-        output = state.get("output")
-        if isinstance(output, dict):
-            status = output.get("status")
-            if status is not None:
-                span.set_tag('http.status_code', status)
+        status = state.get("status")
+        span.set_tag('status', status)
+        if status == "failed":
+            span.log_kv({
+                "event": "error",
+                "stack": state["exception"]
+            })
 
-    status = state.get("status")
-    span.set_tag('status', status)
-    if status == "failed":
-        span.log_kv({
-            "event": "error",
-            "stack": state["exception"]
-        })
+        tolerance_met = state.get("tolerance_met")
+        if tolerance_met is not None:
+            span.set_tag('deviated', 1 if tolerance_met else 0)
 
-    tolerance_met = state.get("tolerance_met")
-    if tolerance_met is not None:
-        span.set_tag('deviated', 1 if tolerance_met else 0)
-
-    span.finish()
+        span.finish()
+    finally:
+        tracer.activity_span = None
 
 
 ###############################################################################
@@ -255,7 +265,7 @@ def create_noop_tracer(configuration: Configuration = None,
     do nothing
     """
     logger.debug("The noop tracer will not send any data out")
-    return opentracing.Tracer()
+    return opentracing.tracer
 
 
 def create_jaeger_tracer(configuration: Configuration = None,
