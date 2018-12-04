@@ -98,6 +98,10 @@ def my_activity(...):
     span.finish()
 ```
 
+Because the opentracing exposes a noop tracer when non has been initialized,
+it should be safe to have that code in your extensions without having to
+determine if the extension has been enabled in the experiment.
+
 ## Open Tracing Provider Support
 
 For now, only the Jaeger tracer is supported but other providers will be added
