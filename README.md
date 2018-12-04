@@ -7,6 +7,11 @@ This project is an extension for the Chaos Toolkit for [OpenTracing][].
 
 [opentracing]: https://opentracing.io/
 
+Here is an example of what it could look like with the Jager backend.
+
+![OpenTracing](https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/raw/master/example.png "Open Tracing with Jaeger")
+
+
 ## Install
 
 This package requires Python 3.5+
@@ -120,7 +125,6 @@ $ pip install chaostoolkit-opentracing[jaeger]
 ```
 
 Unfortunately, the Jaeger client does not yet support Open Tracing 2.0.
-
 
 
 ## Test
