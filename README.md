@@ -7,7 +7,7 @@ This project is an extension for the Chaos Toolkit for [OpenTracing][].
 
 [opentracing]: https://opentracing.io/
 
-Here is an example of what it could look like with the Jager backend.
+Here is an example of what it could look like with the Jaeger backend.
 
 ![OpenTracing](https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/raw/master/example.png "Open Tracing with Jaeger")
 
