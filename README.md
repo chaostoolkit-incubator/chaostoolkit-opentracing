@@ -106,8 +106,10 @@ determine if the extension has been enabled in the experiment.
 
 ## Open Tracing Provider Support
 
-For now, only the Jaeger tracer is supported but other providers will be added
-as need be in the future.
+For now, only the Jaeger tracer is supported but [other backends][backends]
+will be added as need be in the future.
+
+[backends]: https://opentracing.io/docs/supported-tracers/
 
 ### Jaeger tracer
 
