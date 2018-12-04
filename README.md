@@ -80,6 +80,7 @@ to trace specifically, you could do this from your extension's code:
 
 ```python
 import opentracing
+import requests
 
 def my_activity(...):
     headers = {}
@@ -92,7 +93,7 @@ def my_activity(...):
     span.set_tag('span.kind', 'client')
     span.tracer.inject(span, 'http_headers', headers)
 
-    r = session.get(url, headers=headers)
+    r = requests.get(url, headers=headers)
 
     span.set_tag('http.status_code', r.status_code)
     span.finish()
