@@ -67,7 +67,7 @@ As not all Open Tracing providers support yet to fetch the active span from
 the tracer (Open Tracing 2 specification), we attach the following attributes
 to the tracer instance:
 
-```
+```python
 tracer.experiment_span  # span during the lifetime of the experiment
 tracer.hypothesis_span  # span during the lifetime of the hypothesis
 tracer.method_span  # span during the lifetime of the method
@@ -78,7 +78,7 @@ tracer.activity_span  # span during the lifetime of an activity
 For instance, assuming you have an extension that makes a HTTP call you want
 to trace specifically, you could do this from your extension's code:
 
-```
+```python
 import opentracing
 
 def my_activity(...):
