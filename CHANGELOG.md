@@ -4,6 +4,10 @@
 
 [Unreleased]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.1.1...HEAD
 
+### Added
+
+-   More configuration to the Jaeger client (to talk to Zipkin)
+
 ## [0.1.1][] - 2018-12-04
 
 [0.1.1]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.1.0...0.1.1

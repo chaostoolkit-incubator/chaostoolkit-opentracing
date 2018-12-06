@@ -274,6 +274,8 @@ def create_jaeger_tracer(configuration: Configuration = None,
     Create a Jaeger tracer
     """
     from jaeger_client.config import DEFAULT_REPORTING_PORT
+    from jaeger_client.constants import TRACE_ID_HEADER, \
+        BAGGAGE_HEADER_PREFIX
     from jaeger_client import Config
 
     host = configuration.get("tracing_host", "localhost")
@@ -285,6 +287,11 @@ def create_jaeger_tracer(configuration: Configuration = None,
                 'param': 1,
             },
             'logging': True,
+            'propagation': configuration.get('tracing_propagation', None),
+            'trace_id_header': configuration.get(
+                "tracing_id_name", TRACE_ID_HEADER),
+            'baggage_header_prefix': configuration.get(
+                "baggage_prefix", BAGGAGE_HEADER_PREFIX),
             'local_agent': {
                 'reporting_host': host,
                 'reporting_port': port
