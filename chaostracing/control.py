@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-from typing import Any, Dict, List
-import threading
+from typing import Any, Dict, List, NoReturn, Optional
 import time
 
 from chaoslib.types import Activity, Configuration, Experiment, Hypothesis, \
     Journal, Run, Secrets
 from logzero import logger
 import opentracing
+from opentracing import Tracer
 
 __all__ = ["configure_control", "cleanup_control", "before_experiment_control",
            "after_experiment_control", "before_hypothesis_control",
@@ -15,51 +15,40 @@ __all__ = ["configure_control", "cleanup_control", "before_experiment_control",
            "before_rollback_control", "after_rollback_control",
            "after_activity_control"]
 
-# hold a reference to the tracer for the given thread
-local = threading.local()
-
 
 def configure_control(configuration: Configuration = None,
-                      secrets: Secrets = None):
+                      secrets: Secrets = None, **kwargs) -> Optional[Tracer]:
     """
     Configure the tracer once for the life of the experiment's execution.
     """
-    provider = configuration.get("tracing_provider", "noop").lower()
+    tracer = None
+    configuration = configuration or {}
+    provider = kwargs.get(
+        "provider", configuration.get("tracing_provider", "noop")).lower()
     logger.debug("Creating a {} tracer".format(provider))
 
     if provider == "noop":
-        local.tracer = create_noop_tracer(configuration, secrets)
+        tracer = create_noop_tracer(configuration, secrets)
     elif provider == "jaeger":
-        local.tracer = create_jaeger_tracer(configuration, secrets)
+        tracer = create_jaeger_tracer(configuration, secrets, **kwargs)
     else:
         logger.debug("Unsupported tracer provider: {}".format('provider'))
-        return
 
-    # this should not be needed if all providers supported OpenTracing 2 but
-    # this is not the case (notably Jaeger is lagging badly)
-    tracer = local.tracer
-    tracer.experiment_span = None
-    tracer.hypothesis_span = None
-    tracer.method_span = None
-    tracer.rollback_span = None
-    tracer.activity_span = None
+    if tracer is not None:
+        opentracing.set_global_tracer(tracer)
+
+    return tracer
 
 
-def cleanup_control():
+def cleanup_control() -> NoReturn:
     """
     Cleanup the tracer's resources after the experiment has completed
     """
-    tracer = local.tracer
-    local.tracer = None
-    tracer.experiment_span = None
-    tracer.hypothesis_span = None
-    tracer.method_span = None
-    tracer.rollback_span = None
-    tracer.activity_span = None
-
-    if hasattr(tracer, 'close'):
-        time.sleep(0.2)
-        tracer.close()
+    tracer = opentracing.global_tracer()
+    scope = tracer.scope_manager.active
+    if scope is not None:
+        time.sleep(0.3)
+        scope.close()
         time.sleep(0.5)
 
 
@@ -67,31 +56,34 @@ def before_experiment_control(context: Experiment, **kwargs):
     """
     Create a tracing span when the experiment's execution begins.
     """
-    tracer = local.tracer
-    name = context.get("title")
-    span = tracer.start_span(name)
-    tracer.experiment_span = span
+    tracer = opentracing.global_tracer()
+    scope = tracer.scope_manager.active
+    parent = scope.span if scope else None
 
-    span.set_tag('type', 'experiment')
+    name = context.get("title")
+    scope = tracer.start_active_span(
+        name, child_of=parent, finish_on_close=True)
+    scope.span.set_tag('type', 'experiment')
     tags = context.get("tags")
     if tags:
-        span.set_tag('target', ', '.join(tags))
+        scope.span.set_tag('target', ', '.join(tags))
 
     contributions = context.get("contributions")
     if contributions:
         for contribution in contributions:
-            span.set_tag(contribution, contributions[contribution])
+            scope.span.set_tag(contribution, contributions[contribution])
 
     if kwargs:
-        span.log_kv(kwargs)
+        scope.span.log_kv(kwargs)
 
 
 def after_experiment_control(context: Experiment, state: Journal, **kwargs):
     """
     Finishes the span created when the experiment's execution began
     """
-    tracer = local.tracer
-    span = tracer.experiment_span
+    tracer = opentracing.global_tracer()
+    scope = tracer.scope_manager.active
+    span = scope.span
     try:
         if not span:
             return
@@ -99,8 +91,7 @@ def after_experiment_control(context: Experiment, state: Journal, **kwargs):
         status = state.get("status")
         span.set_tag('status', status)
     finally:
-        tracer.experiment_span = None
-        span.finish()
+        scope.close()
 
 
 def before_hypothesis_control(context: Hypothesis, **kwargs):
@@ -108,13 +99,14 @@ def before_hypothesis_control(context: Hypothesis, **kwargs):
     Create a span, child of the experiment's span, before the steady-state
     hypothesis probes are applied
     """
-    tracer = local.tracer
+    tracer = opentracing.global_tracer()
     name = context.get("title")
-    span = tracer.start_span(name, child_of=tracer.experiment_span)
-    tracer.hypothesis_span = span
-    span.set_tag('type', 'hypothesis')
+    scope = tracer.scope_manager.active
+    scope = tracer.start_active_span(
+        name, child_of=scope.span, finish_on_close=True)
+    scope.span.set_tag('type', 'hypothesis')
     if kwargs:
-        span.log_kv(kwargs)
+        scope.span.log_kv(kwargs)
 
 
 def after_hypothesis_control(context: Hypothesis, state: Dict[str, Any],
@@ -122,12 +114,13 @@ def after_hypothesis_control(context: Hypothesis, state: Dict[str, Any],
     """
     Finishes the span created when the steady-state hypothesis began
     """
-    tracer = local.tracer
-    span = tracer.hypothesis_span
-    if not tracer.hypothesis_span:
-        return
-
+    tracer = opentracing.global_tracer()
+    scope = tracer.scope_manager.active
+    span = scope.span
     try:
+        if not span:
+            return
+
         deviated = not state.get("steady_state_met")
         span.set_tag('deviated', deviated)
         if deviated and "probes" in state:
@@ -139,8 +132,7 @@ def after_hypothesis_control(context: Hypothesis, state: Dict[str, Any],
                 "computed": deviated_probe["output"]
             })
     finally:
-        tracer.hypothesis_span = None
-        span.finish()
+        scope.close()
 
 
 def before_method_control(context: Experiment, **kwargs):
@@ -148,23 +140,23 @@ def before_method_control(context: Experiment, **kwargs):
     Create a span, child of the experiment's span, before the method activities
     are applied
     """
-    tracer = local.tracer
-    span = tracer.start_span(
-        "Method", child_of=tracer.experiment_span)
-    tracer.method_span = span
-    span.set_tag('type', 'method')
+    tracer = opentracing.global_tracer()
+    scope = tracer.scope_manager.active
+    scope = tracer.start_active_span(
+        "Method", child_of=scope.span, finish_on_close=True)
+    scope.span.set_tag('type', 'method')
     if kwargs:
-        span.log_kv(kwargs)
+        scope.span.log_kv(kwargs)
 
 
 def after_method_control(context: Experiment, state: List[Run], **kwargs):
     """
     Finishes the span created when the method began
     """
-    tracer = local.tracer
-    if tracer.method_span:
-        tracer.method_span.finish()
-        tracer.method_span = None
+    tracer = opentracing.global_tracer()
+    scope = tracer.scope_manager.active
+    if scope:
+        scope.close()
 
 
 def before_rollback_control(context: Experiment, **kwargs):
@@ -172,23 +164,23 @@ def before_rollback_control(context: Experiment, **kwargs):
     Create a span, child of the experiment's span, before the rollback
     activities are applied
     """
-    tracer = local.tracer
-    span = tracer.start_span(
-        "Rollbacks", child_of=tracer.experiment_span)
-    tracer.rollback_span = span
-    span.set_tag('type', 'rollback')
+    tracer = opentracing.global_tracer()
+    scope = tracer.scope_manager.active
+    scope = tracer.start_active_span(
+        "Rollbacks", child_of=scope.span, finish_on_close=True)
+    scope.span.set_tag('type', 'rollback')
     if kwargs:
-        span.log_kv(kwargs)
+        scope.span.log_kv(kwargs)
 
 
 def after_rollback_control(context: Experiment, state: List[Run], **kwargs):
     """
     Finishes the span created when the rollback began
     """
-    tracer = local.tracer
-    if tracer.rollback_span:
-        tracer.rollback_span.finish()
-        tracer.rollback_span = None
+    tracer = opentracing.global_tracer()
+    scope = tracer.scope_manager.active
+    if scope:
+        scope.close()
 
 
 def before_activity_control(context: Activity, **kwargs):
@@ -196,39 +188,39 @@ def before_activity_control(context: Activity, **kwargs):
     Create a span, child of the method or rollback's span, before the
     activitiy is applied
     """
-    tracer = local.tracer
+    tracer = opentracing.global_tracer()
+    scope = tracer.scope_manager.active
     name = context.get("name")
-    parent_span = tracer.hypothesis_span or tracer.method_span or \
-        tracer.rollback_span or tracer.experiment_span
-    span = tracer.start_span(name, child_of=parent_span)
-    tracer.activity_span = span
-    span.set_tag('type', 'activity')
-    span.set_tag('activity', context.get("type"))
+    scope = tracer.start_active_span(
+        name, child_of=scope.span, finish_on_close=True)
+    scope.span.set_tag('type', 'activity')
+    scope.span.set_tag('activity', context.get("type"))
 
     # special treatment for HTTP activities
     # we inject the metadata of the HTTP request
     provider = context["provider"]
-    span.log_kv(provider)
+    scope.span.log_kv(provider)
     if provider["type"] == "http":
         headers = provider.get("headers", {})
-        span.set_tag(
+        scope.span.set_tag(
             'http.method', provider.get("method", "GET").upper())
-        span.set_tag('http.url', provider["url"])
-        span.set_tag('span.kind', 'client')
-        span.tracer.inject(span, 'http_headers', headers)
+        scope.span.set_tag('http.url', provider["url"])
+        scope.span.set_tag('span.kind', 'client')
+        scope.span.tracer.inject(scope.span, 'http_headers', headers)
         provider["headers"] = headers
 
     if kwargs:
-        span.log_kv(kwargs)
+        scope.span.log_kv(kwargs)
 
 
 def after_activity_control(context: Activity, state: Run, **kwargs):
     """
     Finishes the span created when the activity began
     """
-    tracer = local.tracer
-    span = tracer.activity_span
+    tracer = opentracing.global_tracer()
+    scope = tracer.scope_manager.active
     try:
+        span = scope.span
         # special treatment for HTTP activities
         # we inject the status code of the HTTP response
         provider = context["provider"]
@@ -255,7 +247,7 @@ def after_activity_control(context: Activity, state: Run, **kwargs):
 
         span.finish()
     finally:
-        tracer.activity_span = None
+        scope.close()
 
 
 ###############################################################################
@@ -264,7 +256,7 @@ def after_activity_control(context: Activity, state: Run, **kwargs):
 def create_noop_tracer(configuration: Configuration = None,
                        secrets: Secrets = None):
     """
-    Create a dummy tracer that will respond to the OpenTRacing API but will
+    Create a dummy tracer that will respond to the OpenTracing API but will
     do nothing
     """
     logger.debug("The noop tracer will not send any data out")
@@ -272,7 +264,7 @@ def create_noop_tracer(configuration: Configuration = None,
 
 
 def create_jaeger_tracer(configuration: Configuration = None,
-                         secrets: Secrets = None):
+                         secrets: Secrets = None, **kwargs):
     """
     Create a Jaeger tracer
     """
@@ -281,8 +273,10 @@ def create_jaeger_tracer(configuration: Configuration = None,
         BAGGAGE_HEADER_PREFIX
     from jaeger_client import Config
 
-    host = configuration.get("tracing_host", "localhost")
-    port = configuration.get("tracing_port", DEFAULT_REPORTING_PORT)
+    host = kwargs.get(
+        "host", configuration.get("tracing_host", "localhost"))
+    port = kwargs.get(
+        "port", configuration.get("tracing_port", DEFAULT_REPORTING_PORT))
     tracer_config = Config(
         config={
             'sampler': {
@@ -290,11 +284,14 @@ def create_jaeger_tracer(configuration: Configuration = None,
                 'param': 1,
             },
             'logging': True,
-            'propagation': configuration.get('tracing_propagation', None),
-            'trace_id_header': configuration.get(
-                "tracing_id_name", TRACE_ID_HEADER),
-            'baggage_header_prefix': configuration.get(
-                "baggage_prefix", BAGGAGE_HEADER_PREFIX),
+            'propagation': kwargs.get(
+                "propagation", configuration.get('tracing_propagation', None)),
+            'trace_id_header': kwargs.get(
+                "id_name", configuration.get(
+                    "tracing_id_name", TRACE_ID_HEADER)),
+            'baggage_header_prefix': kwargs.get(
+                "baggage_prefix", configuration.get(
+                    "baggage_prefix", BAGGAGE_HEADER_PREFIX)),
             'local_agent': {
                 'reporting_host': host,
                 'reporting_port': port
