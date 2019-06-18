@@ -132,6 +132,7 @@ def after_hypothesis_control(context: Hypothesis, state: Dict[str, Any],
         span.set_tag('deviated', deviated)
         if deviated and "probes" in state:
             deviated_probe = state["probes"][-1]
+            span.set_tag("error", True)
             span.log_kv({
                 "probe": deviated_probe["activity"]["name"],
                 "expected": deviated_probe["activity"]["tolerance"],
@@ -241,6 +242,7 @@ def after_activity_control(context: Activity, state: Run, **kwargs):
         status = state.get("status")
         span.set_tag('status', status)
         if status == "failed":
+            span.set_tag("error", True)
             span.log_kv({
                 "event": "error",
                 "stack": state["exception"]
@@ -249,6 +251,7 @@ def after_activity_control(context: Activity, state: Run, **kwargs):
         tolerance_met = state.get("tolerance_met")
         if tolerance_met is not None:
             span.set_tag('deviated', 1 if tolerance_met else 0)
+            span.set_tag('error', True if tolerance_met else False)
 
         span.finish()
     finally:
