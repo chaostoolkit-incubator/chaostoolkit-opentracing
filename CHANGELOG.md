@@ -4,6 +4,10 @@
 
 [Unreleased]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.1.2...HEAD
 
+### Added
+
+-   Marked with `error:true` deviated hypotheses and failed activities
+
 ## [0.1.2][] - 2018-12-06
 
 [0.1.2]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.1.1...0.1.2
