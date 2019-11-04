@@ -21,6 +21,7 @@ def configure_control(configuration: Configuration = None,
     """
     Configure the tracer once for the life of the experiment's execution.
     """
+    logger.debug("Configuring opentracing control...")
     tracer = None
     configuration = configuration or {}
     provider = kwargs.get(
@@ -37,6 +38,7 @@ def configure_control(configuration: Configuration = None,
     if tracer is not None:
         opentracing.set_global_tracer(tracer)
 
+    logger.debug("OpenTracing tracer {} created".format(tracer))
     return tracer
 
 
@@ -49,6 +51,11 @@ def cleanup_control() -> NoReturn:
     if scope is not None:
         time.sleep(0.3)
         scope.close()
+        time.sleep(0.5)
+
+    if tracer is not None and hasattr(tracer, 'close'):
+        time.sleep(0.3)
+        tracer.close()
         time.sleep(0.5)
 
 
@@ -245,9 +252,9 @@ def after_activity_control(context: Activity, state: Run, **kwargs):
             span.set_tag('deviated', 1 if tolerance_met else 0)
             span.set_tag('error', True if tolerance_met else False)
 
-        span.finish()
     finally:
-        scope.close()
+        if scope:
+            scope.close()
 
 
 ###############################################################################
