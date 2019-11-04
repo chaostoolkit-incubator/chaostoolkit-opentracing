@@ -4,6 +4,16 @@
 
 [Unreleased]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.1.2...HEAD
 
+### Changed
+
+-   Moved to OpenTracing 2 API
+-   [BREAKING CHANGE] this control does not expose spans as explicit properties
+    of the tracer any longer. This was due to a limitation of some of the
+    Open Tracing clients (namely Jaeger). Now these clients have been updated
+    to the newer version, this is not needed anymore. You can use the
+    active span of the tracer as expected. This only breaks if you accessed
+    directly those properties.
+
 ### Added
 
 -   Marked with `error:true` deviated hypotheses and failed activities

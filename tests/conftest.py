@@ -2,7 +2,7 @@ from chaoslib.types import Activity, Configuration, Experiment, Hypothesis
 import opentracing
 import pytest
 
-from chaostracing.control import configure_control, cleanup_control, local
+from chaostracing.control import configure_control, cleanup_control
 
 @pytest.fixture
 def configuration() -> Configuration:
@@ -14,8 +14,8 @@ def configuration() -> Configuration:
 @pytest.fixture
 def tracer(configuration: Configuration) -> opentracing.Tracer:
     try:
-        configure_control(configuration)
-        yield local.tracer
+        tracer = configure_control(configuration)
+        yield tracer
     finally:
         cleanup_control()
 
