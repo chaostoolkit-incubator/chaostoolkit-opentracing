@@ -62,7 +62,9 @@ address `127.0.0.1:6831` (over UDP).
 ### Declare within the settings
 
 You may also declare the control to be applied to all experiments by declaring
-the control from within the [Chaos Toolkit settings file][ctksettings]:
+the control from within the [Chaos Toolkit settings file][ctksettings]. In that
+case, you do not need to set the configuration or the controls at the
+experiment level and the control will be applied to every experiments you run.
 
 ```yaml
 controls:
@@ -95,7 +97,7 @@ import opentracing
 
 def some_function(configuration: Configuration, secrets: Secrets):
     tracer = opentracing.global_tracer()
-    scope = tracer.scope_manager.active()
+    scope = tracer.scope_manager.active
     parent = scope.span
 
     with tracer.start_span("call-service1", child_of=parent) as span:
