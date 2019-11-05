@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/chaostoolkit-incubator/chaostoolkit-opentracing.svg?branch=master)](https://travis-ci.org/chaostoolkit-incubator/chaostoolkit-opentracing)
 [![Python versions](https://img.shields.io/pypi/pyversions/chaostoolkit-opentracing.svg)](https://www.python.org/)
 
-This project is an extension for the Chaos Toolkit for [OpenTracing][].
+This project is an extension for the Chaos Toolkit for [OpenTracing 2][].
 
 [opentracing]: https://opentracing.io/
 
@@ -130,11 +130,8 @@ will be added as need be in the future.
 To install the necessary dependencies for the Jaeger tracer, please run:
 
 ```
-$ pip install chaostoolkit-opentracing[jaeger]
+$ pip install -U jaeger-client~=4.1
 ```
-
-Unfortunately, the Jaeger client does not yet support Open Tracing 2.0.
-
 
 ## Test
 

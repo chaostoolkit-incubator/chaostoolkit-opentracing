@@ -48,12 +48,7 @@ install_require = []
 with io.open('requirements.txt') as f:
     install_require = [l.strip() for l in f if not l.startswith('#')]
 
-extra_requires = {
-    "jaeger": [
-        "opentracing>=1.2.2,<2",
-        "jaeger-client==3.10.0"
-    ]
-}
+extra_requires = {}
 
 setup_params = dict(
     name=name,

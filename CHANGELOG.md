@@ -4,6 +4,10 @@
 
 [Unreleased]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.2.0...HEAD
 
+### Changed
+
+-   Clarify how to install the Jaeger client
+
 ## [0.2.0][] - 2019-11-04
 
 [0.2.0]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.1.2...0.2.0
