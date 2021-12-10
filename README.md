@@ -3,9 +3,11 @@
 [![Build Status](https://travis-ci.org/chaostoolkit-incubator/chaostoolkit-opentracing.svg?branch=master)](https://travis-ci.org/chaostoolkit-incubator/chaostoolkit-opentracing)
 [![Python versions](https://img.shields.io/pypi/pyversions/chaostoolkit-opentracing.svg)](https://www.python.org/)
 
-This project is an extension for the Chaos Toolkit for [OpenTracing 2][].
+This project is an extension for the Chaos Toolkit for [OpenTracing][] and
+[OpenTelemetry][].
 
 [opentracing]: https://opentracing.io/
+[OpenTelemetry]: https://opentelemetry.io/
 
 Here is an example of what it could look like with the Jaeger backend.
 
@@ -14,7 +16,7 @@ Here is an example of what it could look like with the Jaeger backend.
 
 ## Install
 
-This package requires Python 3.5+
+This package requires Python 3.6+
 
 To be used from your experiment, this package must be installed in the Python
 environment where [chaostoolkit][] already lives.
@@ -31,10 +33,12 @@ Currently, this extension only provides control support to send traces to
 your provider during the execution of the experiment. It does not yet expose
 any probes or actions per-se.
 
+NOTE: Please see at the bottom of the page all the supported clients and
+exporters this control supports.
+
 ### Declare within the experiment
 
 To use this control, you can declare it on a per experiment basis like this:
-
 
 ```json
 {
@@ -120,17 +124,167 @@ will not actually be set to the one that was initialized.
 
 ## Open Tracing Provider Support
 
-For now, only the Jaeger tracer is supported but [other backends][backends]
-will be added as need be in the future.
-
-[backends]: https://opentracing.io/docs/supported-tracers/
-
 ### Jaeger tracer
+
+The Jager tracer relies on the OpenTracing protocol which has now be superseded
+by OpenTelemetry. However, we still provide support for it.
 
 To install the necessary dependencies for the Jaeger tracer, please run:
 
 ```
-$ pip install -U jaeger-client~=4.1
+$ pip install -U jaeger-client~=4.8
+```
+
+Use the following configuration:
+
+```json
+{
+    "configuration": {
+        "tracing_provider": "jaeger",
+        "tracing_host": "127.0.0.1",
+        "tracing_port": 6831,
+        "tracing_propagation": "b3"
+    },
+    "controls": [
+        {
+            "name": "opentracing",
+            "provider": {
+                "type": "python",
+                "module": "chaostracing.control"
+            }
+        }
+    ]
+}
+```
+
+## OpenTelemetry provider
+
+To install the baseline dependencies for the OpenTelemetry tracer, please run:
+
+```
+$ pip install -U opentelemetry-api \
+    opentelemetry-sdk \
+    opentelemetry-opentracing-shim
+```
+
+#### Jaeger thrift exporter
+
+If you want to export using the Jaeger thrift protocol, please install:
+
+```
+$ pip install opentelemetry-exporter-jaeger-thrift
+```
+
+Use the following configuration:
+
+```json
+{
+    "configuration": {
+        "tracing_provider": "opentelemetry",
+        "tracing_opentelemetry_exporter": "jaeger-thrift",
+        "tracing_host": "127.0.0.1",
+        "tracing_port": 6831
+    },
+    "controls": [
+        {
+            "name": "opentracing",
+            "provider": {
+                "type": "python",
+                "module": "chaostracing.control"
+            }
+        }
+    ]
+}
+```
+
+#### Jaeger grpc exporter
+
+If you want to export using the Jaeger grpc protocol, please install:
+
+```
+$ pip install opentelemetry-exporter-jaeger-grpc
+```
+
+Use the following configuration:
+
+```json
+{
+    "configuration": {
+        "tracing_provider": "opentelemetry",
+        "tracing_opentelemetry_exporter": "jaeger-grpc",
+        "tracing_opentelemetry_collector_endpoint": "localhost:14250",
+        "tracing_opentelemetry_collector_endpoint_insecure": true
+    },
+    "controls": [
+        {
+            "name": "opentracing",
+            "provider": {
+                "type": "python",
+                "module": "chaostracing.control"
+            }
+        }
+    ]
+}
+```
+
+#### OLTP grpc exporter
+
+If you want to export using the OLTP grpc protocol, please install:
+
+```
+$ pip install opentelemetry-exporter-oltp-grpc
+```
+
+Use the following configuration:
+
+```json
+{
+    "configuration": {
+        "tracing_provider": "opentelemetry",
+        "tracing_opentelemetry_exporter": "oltp-grpc",
+        "tracing_opentelemetry_collector_endpoint": "http://localhost:4317",
+        "tracing_opentelemetry_collector_endpoint_insecure": true
+    },
+    "controls": [
+        {
+            "name": "opentracing",
+            "provider": {
+                "type": "python",
+                "module": "chaostracing.control"
+            }
+        }
+    ]
+}
+```
+
+#### OLTP HTTP exporter
+
+If you want to export using the OLTP HTTP protocol, please install:
+
+```
+$ pip install opentelemetry-exporter-oltp-http
+```
+
+Use the following configuration:
+
+```json
+{
+    "configuration": {
+        "tracing_provider": "opentelemetry",
+        "tracing_opentelemetry_exporter": "oltp-http",
+        "tracing_opentelemetry_collector_endpoint": "http://localhost:4318",
+        "tracing_opentelemetry_collector_endpoint_insecure": true
+    },
+    "controls": [
+        {
+            "name": "opentracing",
+            "provider": {
+                "type": "python",
+                "module": "chaostracing.control"
+            }
+        }
+    ]
+}
 ```
 
 ## Test

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import json
 from typing import Any, Dict, List, NoReturn, Optional
 import time
 
@@ -6,7 +7,7 @@ from chaoslib.types import Activity, Configuration, Experiment, Hypothesis, \
     Journal, Run, Secrets
 from logzero import logger
 import opentracing
-from opentracing import Tracer
+from opentracing import Span, Tracer
 
 __all__ = ["configure_control", "cleanup_control", "before_experiment_control",
            "after_experiment_control", "before_hypothesis_control",
@@ -32,6 +33,9 @@ def configure_control(configuration: Configuration = None,
         tracer = create_noop_tracer(configuration, secrets)
     elif provider == "jaeger":
         tracer = create_jaeger_tracer(configuration, secrets, **kwargs)
+    elif provider == "opentelemetry":
+        tracer = create_opentelemetry_tracer(
+            configuration, secrets, **kwargs)
     else:
         logger.debug("Unsupported tracer provider: {}".format('provider'))
 
@@ -81,7 +85,7 @@ def before_experiment_control(context: Experiment, **kwargs):
             scope.span.set_tag(contribution, contributions[contribution])
 
     if kwargs:
-        scope.span.log_kv(kwargs)
+        _log_kv(kwargs, tracer, scope.span)
 
 
 def after_experiment_control(context: Experiment, state: Journal, **kwargs):
@@ -113,7 +117,7 @@ def before_hypothesis_control(context: Hypothesis, **kwargs):
         name, child_of=scope.span, finish_on_close=True)
     scope.span.set_tag('type', 'hypothesis')
     if kwargs:
-        scope.span.log_kv(kwargs)
+        _log_kv(kwargs, tracer, scope.span)
 
 
 def after_hypothesis_control(context: Hypothesis, state: Dict[str, Any],
@@ -133,11 +137,11 @@ def after_hypothesis_control(context: Hypothesis, state: Dict[str, Any],
         if deviated and "probes" in state:
             deviated_probe = state["probes"][-1]
             span.set_tag("error", True)
-            span.log_kv({
+            _log_kv({
                 "probe": deviated_probe["activity"]["name"],
                 "expected": deviated_probe["activity"]["tolerance"],
                 "computed": deviated_probe["output"]
-            })
+            }, tracer, span)
     finally:
         scope.close()
 
@@ -153,7 +157,7 @@ def before_method_control(context: Experiment, **kwargs):
         "Method", child_of=scope.span, finish_on_close=True)
     scope.span.set_tag('type', 'method')
     if kwargs:
-        scope.span.log_kv(kwargs)
+        _log_kv(kwargs, tracer, scope.span)
 
 
 def after_method_control(context: Experiment, state: List[Run], **kwargs):
@@ -177,7 +181,7 @@ def before_rollback_control(context: Experiment, **kwargs):
         "Rollbacks", child_of=scope.span, finish_on_close=True)
     scope.span.set_tag('type', 'rollback')
     if kwargs:
-        scope.span.log_kv(kwargs)
+        _log_kv(kwargs, tracer, scope.span)
 
 
 def after_rollback_control(context: Experiment, state: List[Run], **kwargs):
@@ -206,7 +210,7 @@ def before_activity_control(context: Activity, **kwargs):
     # special treatment for HTTP activities
     # we inject the metadata of the HTTP request
     provider = context["provider"]
-    scope.span.log_kv(provider)
+    _log_kv(provider, tracer, scope.span)
     if provider["type"] == "http":
         headers = provider.get("headers", {})
         scope.span.set_tag(
@@ -217,7 +221,7 @@ def before_activity_control(context: Activity, **kwargs):
         provider["headers"] = headers
 
     if kwargs:
-        scope.span.log_kv(kwargs)
+        _log_kv(kwargs, tracer, scope.span)
 
 
 def after_activity_control(context: Activity, state: Run, **kwargs):
@@ -242,10 +246,10 @@ def after_activity_control(context: Activity, state: Run, **kwargs):
         span.set_tag('status', status)
         if status == "failed":
             span.set_tag("error", True)
-            span.log_kv({
+            _log_kv({
                 "event": "error",
                 "stack": state["exception"]
-            })
+            }, tracer, span)
 
         tolerance_met = state.get("tolerance_met")
         if tolerance_met is not None:
@@ -310,3 +314,112 @@ def create_jaeger_tracer(configuration: Configuration = None,
     addr = "{}:{}".format(host, port)
     logger.debug("Configured Jaeger Tracer to send to '{}'".format(addr))
     return tracer_config.initialize_tracer()
+
+
+def create_opentelemetry_tracer(configuration: Configuration = None,
+                                     secrets: Secrets = None, **kwargs):
+    """
+    Create an OpenTelemetry tracer based of an opentracing tracer.
+
+    Currently supported exporter are: "oltp-grpc", "oltp-http",
+    "jaeger-thrift" and "jaeger-grpc".
+    """
+    from opentelemetry import trace
+    from opentelemetry.sdk.resources import SERVICE_NAME, Resource
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import BatchSpanProcessor
+    from opentelemetry.shim.opentracing_shim import create_tracer
+
+    resource = None
+    exporter = configuration.get("tracing_opentelemetry_exporter")
+    if exporter not in [
+            "oltp-grpc", "oltp-http", "jaeger-thrift", "jaeger-grpc"]:
+        logger.debug(
+            "Unsupported opentelemetry shim exporter: {}".format('exporter'))
+        return
+
+    # let's create our tracer
+    resource = Resource.create({SERVICE_NAME: 'chaostoolkit'})
+    trace.set_tracer_provider(TracerProvider(resource=resource))
+    tracer = create_tracer(trace)
+
+    # now let's attach a concrete exporter to it
+    if exporter == "jaeger-thrift":
+        from opentelemetry.exporter.jaeger.thrift import JaegerExporter
+
+        host = kwargs.get(
+            "host", configuration.get("tracing_host", "localhost"))
+        port = kwargs.get("port", configuration.get("tracing_port", 6831))
+        ot_exporter = JaegerExporter(
+            agent_host_name=host,
+            agent_port=port)
+    elif exporter == "jaeger-grpc":
+        from opentelemetry.exporter.jaeger.proto.grpc import JaegerExporter
+        collector_endpoint = kwargs.get(
+            "collector_endpoint", configuration.get(
+                "tracing_opentelemetry_collector_endpoint", "localhost:14250"))
+        insecure = kwargs.get(
+            "collector_insecure", configuration.get(
+                "tracing_opentelemetry_collector_endpoint_insecure", False))
+        ot_exporter = JaegerExporter(
+            collector_endpoint=collector_endpoint,
+            insecure=insecure)
+    elif exporter == "oltp-grpc":
+        from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
+            OTLPSpanExporter
+        )
+        collector_endpoint = kwargs.get(
+            "collector_endpoint", configuration.get(
+                "tracing_opentelemetry_collector_endpoint",
+                "http://localhost:4317"))
+        insecure = kwargs.get(
+            "collector_insecure", configuration.get(
+                "tracing_opentelemetry_collector_endpoint_insecure", False))
+        ot_exporter = OTLPSpanExporter(
+            endpoint=collector_endpoint,
+            insecure=insecure)
+    elif exporter == "oltp-http":
+        from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
+            OTLPSpanExporter
+        )
+        collector_endpoint = kwargs.get(
+            "collector_endpoint", configuration.get(
+                "tracing_opentelemetry_collector_endpoint",
+                "http://localhost:4317"))
+        insecure = kwargs.get(
+            "collector_insecure", configuration.get(
+                "tracing_opentelemetry_collector_endpoint_insecure", False))
+        ot_exporter = OTLPSpanExporter(
+            endpoint=collector_endpoint,
+            insecure=insecure)
+
+    span_processor = BatchSpanProcessor(ot_exporter)
+    trace.get_tracer_provider().add_span_processor(span_processor)
+    return tracer
+
+
+def _log_kv(key_values: Dict[str, Any], tracer: Any, span: Span):
+    """
+    OpenTracing allows for any payload to be sent by OpenTelemetry supports
+    only native datatypes. So, in that case, we serialize to a json string
+    when we can.
+    """
+    if not key_values:
+        return
+
+    if tracer.__class__.__name__ != 'TracerShim':
+        span.log_kv(key_values)
+        return
+
+    # opentelemetry doesn't tolerate anything but this list of types for
+    # values so we can't send anything that is not one of these
+    kv = {}
+    for k, v in key_values.items():
+        if isinstance(v, (bool, str, bytes, int, float)):
+            kv[k] = v
+        else:
+            try:
+                kv[k] = json.dumps(v, indent=False)
+            except Exception as x:
+                pass
+    span.log_kv(kv)
