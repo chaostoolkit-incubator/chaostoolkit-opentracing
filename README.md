@@ -1,6 +1,6 @@
 # Chaos Toolkit Extension for Open Tracing
 
-[![Build Status](https://travis-ci.org/chaostoolkit-incubator/chaostoolkit-opentracing.svg?branch=master)](https://travis-ci.org/chaostoolkit-incubator/chaostoolkit-opentracing)
+[![Release](https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/actions/workflows/release.yaml/badge.svg)](https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/actions/workflows/release.yaml)
 [![Python versions](https://img.shields.io/pypi/pyversions/chaostoolkit-opentracing.svg)](https://www.python.org/)
 
 This project is an extension for the Chaos Toolkit for [OpenTracing][] and
