@@ -1,14 +1,13 @@
-from chaoslib.types import Activity, Configuration, Experiment, Hypothesis
 import opentracing
 import pytest
+from chaoslib.types import Activity, Configuration, Experiment, Hypothesis
 
-from chaostracing.control import configure_control, cleanup_control
+from chaostracing.control import cleanup_control, configure_control
+
 
 @pytest.fixture
 def configuration() -> Configuration:
-    return {
-        "tracing_provider": "noop"
-    }
+    return {"tracing_provider": "noop"}
 
 
 @pytest.fixture
@@ -25,9 +24,7 @@ def experiment() -> Experiment:
     return {
         "title": "This is an experiment",
         "tags": ["tag1", "tag2"],
-        "contributions": {
-            "availability": "high"
-        },
+        "contributions": {"availability": "high"},
         "steady-state-hypothesis": {
             "title": "This is an hypothesis",
             "probes": [
@@ -38,12 +35,10 @@ def experiment() -> Experiment:
                         "type": "python",
                         "module": "os.path",
                         "func": "exists",
-                        "arguments": {
-                            "path": __file__
-                        }
-                    }
+                        "arguments": {"path": __file__},
+                    },
                 }
-            ]
+            ],
         },
         "method": [
             {
@@ -53,12 +48,10 @@ def experiment() -> Experiment:
                     "type": "python",
                     "module": "os.path",
                     "func": "mkdir",
-                    "arguments": {
-                        "path": "/tmp/test"
-                    }
-                }
+                    "arguments": {"path": "/tmp/test"},
+                },
             }
-        ]
+        ],
     }
 
 

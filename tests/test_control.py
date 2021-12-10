@@ -1,15 +1,10 @@
 # -*- coding: utf-8 -*-
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
-from chaoslib.types import Activity, Configuration, Experiment, Hypothesis
 import opentracing
-import pytest
+from chaoslib.types import Configuration
 
-from chaostracing.control import cleanup_control, configure_control, \
-    before_experiment_control, after_experiment_control, \
-    before_hypothesis_control, after_hypothesis_control, \
-    before_method_control, after_method_control, before_rollback_control, \
-    after_rollback_control, before_activity_control, after_activity_control
+from chaostracing.control import cleanup_control, configure_control
 
 
 def test_create_noop_tracer(configuration: Configuration):
@@ -22,10 +17,10 @@ def test_create_noop_tracer(configuration: Configuration):
 
 def test_cleanup_control(configuration: Configuration):
     tracer = opentracing.global_tracer()
-    span = tracer.start_active_span('boom')
+    tracer.start_active_span("boom")
     scope = tracer.scope_manager.active
     assert scope is not None
 
-    with patch.object(scope, 'close') as close:
+    with patch.object(scope, "close") as close:
         cleanup_control()
         assert close.call_count == 1
