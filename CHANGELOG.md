@@ -2,7 +2,18 @@
 
 ## [Unreleased][]
 
-[Unreleased]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.2.1...HEAD
+[Unreleased]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.3.0...HEAD
+
+## [0.3.0][] - 2021-12-10
+
+[0.3.0]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.2.1...0.3.0
+
+### Changed
+
+-   Added OpenTelemetry support
+-   Moved to GitHub action for building/releasing
+-   Set Python baseline support to 3.6
+-   Using black and flake8 to lint the source
 
 ## [0.2.1][] - 2019-11-05
 
