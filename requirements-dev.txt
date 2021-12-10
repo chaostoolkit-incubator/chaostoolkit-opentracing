@@ -5,3 +5,6 @@ pytest-cov
 pytest-sugar
 requests
 requests_mock
+flake8
+black
+isort
