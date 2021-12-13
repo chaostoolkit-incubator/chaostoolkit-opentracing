@@ -414,6 +414,14 @@ def create_opentelemetry_tracer(
         )
         ot_exporter = OTLPSpanExporter(endpoint=collector_endpoint, insecure=insecure)
 
+    baggage = kwargs.get(
+        "baggage_prefix",
+        configuration.get("tracing_opentelemetry_baggage_prefix"))
+    if baggage:
+        from opentelemetry.propagate import set_global_textmap
+        from opentelemetry.propagators.b3 import B3Format
+        set_global_textmap(B3Format())
+
     span_processor = BatchSpanProcessor(ot_exporter)
     trace.get_tracer_provider().add_span_processor(span_processor)
     return tracer

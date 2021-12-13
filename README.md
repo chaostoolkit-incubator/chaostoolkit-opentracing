@@ -167,6 +167,13 @@ $ pip install -U opentelemetry-api \
     opentelemetry-opentracing-shim
 ```
 
+If you want the `b3` [propagator](https://opentelemetry-python.readthedocs.io/en/stable/getting-started.html#configure-your-http-propagator-b3-baggage),
+please also install:
+
+```
+$ pip install opentelemetry-propagator-b3
+```
+
 #### Jaeger thrift exporter
 
 If you want to export using the Jaeger thrift protocol, please install:
@@ -332,6 +339,7 @@ RUN apk add --no-cache --virtual build-deps gcc g++ git libffi-dev linux-headers
     opentelemetry-api \
     opentelemetry-sdk \
     opentelemetry-opentracing-shim && \
+    opentelemetry-propagator-b3 && \
     apk del build-deps
 USER 1001
 ```

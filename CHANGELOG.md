@@ -4,6 +4,10 @@
 
 [Unreleased]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.3.0...HEAD
 
+### Added
+
+-   Support for `b3` propagator when using Open Telemetry
+
 ## [0.3.0][] - 2021-12-10
 
 [0.3.0]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.2.1...0.3.0
