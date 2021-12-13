@@ -202,7 +202,7 @@ Use the following configuration:
 If you want to export using the Jaeger grpc protocol, please install:
 
 ```
-$ pip install opentelemetry-exporter-jaeger-grpc
+$ pip install opentelemetry-exporter-jaeger-proto-grpc
 ```
 
 Use the following configuration:
@@ -232,7 +232,7 @@ Use the following configuration:
 If you want to export using the OLTP grpc protocol, please install:
 
 ```
-$ pip install opentelemetry-exporter-oltp-grpc
+$ pip install opentelemetry-exporter-otlp-proto-grpc
 ```
 
 Use the following configuration:
@@ -262,7 +262,7 @@ Use the following configuration:
 If you want to export using the OLTP HTTP protocol, please install:
 
 ```
-$ pip install opentelemetry-exporter-oltp-http
+$ pip install opentelemetry-exporter-otlp-proto-http
 ```
 
 Use the following configuration:
