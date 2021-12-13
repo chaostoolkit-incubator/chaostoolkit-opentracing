@@ -174,6 +174,12 @@ please also install:
 $ pip install opentelemetry-propagator-b3
 ```
 
+In that case, in all configurations below, add:
+
+```json
+"tracing_opentelemetry_baggage_prefix": "b3"
+```
+
 #### Jaeger thrift exporter
 
 If you want to export using the Jaeger thrift protocol, please install:
