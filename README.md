@@ -314,6 +314,28 @@ Make sure you you correctly set the IP address of the traces agent/collector
 so it can be reached. You can use `localhost` if you link networks between
 containers of course too.
 
+Here is an example of a Dockerfile to create an image with all the
+providers/exporters and their dependencies:
+
+```
+FROM chaostoolkit/chaostoolkit:latest
+
+USER root
+RUN apk add --no-cache --virtual build-deps gcc g++ git libffi-dev linux-headers \
+        python3-dev musl-dev && \
+    apk add libstdc++ && \
+    pip install --no-cache-dir -q -U pip setuptools && \
+    pip install --prefer-binary --no-cache-dir -q -U chaostoolkit \
+    chaostoolkit-opentracing \
+    jaeger-client \
+    opentelemetry-exporter-jaeger-proto-grpc \
+    opentelemetry-api \
+    opentelemetry-sdk \
+    opentelemetry-opentracing-shim && \
+    apk del build-deps
+USER 1001
+```
+
 ### From Kubernetes
 
 Assuming you have a container image with the `chaostoolkit-opentracing`
