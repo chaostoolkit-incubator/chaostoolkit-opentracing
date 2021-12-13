@@ -287,6 +287,70 @@ Use the following configuration:
 }
 ```
 
+## Run from containers
+
+### From Docker
+
+Create the following Dockerfile:
+
+```
+FROM chaostoolkit/chaostoolkit:latest
+
+RUN pip install --no-cache-dir -q -U chaostoolkit-opentracing jaeger-client 
+```
+
+Obviously adapt the dependencies based on which provider/exporter you want to
+use.
+
+
+Then run this image by mounting your experiment file, for instance, something
+like:
+
+```console
+$ docker run -v `pwd`/experiment.json:/home/svc/experiment.json my-image run experiment.json
+```
+
+Make sure you you correctly set the IP address of the traces agent/collector
+so it can be reached. You can use `localhost` if you link networks between
+containers of course too.
+
+### From Kubernetes
+
+Assuming you have a container image with the `chaostoolkit-opentracing`
+extension installed:
+
+
+```yaml
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: ctk-tracing
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ctk-tracing
+  template:
+    metadata:
+      name: ctk-tracing
+      labels:
+        app: ctk-tracing
+    spec:
+      containers:
+      - image: my-image
+        name: ctk-tracing
+        imagePullPolicy: Always
+        command:
+          - /usr/local/bin/chaos
+          - run
+          - https://raw.githubusercontent.com/some/place/experiment.json
+
+```
+
+Obviously you can deliver the experiment as mounted file via volume as well.
+Again, simply make sure you set the correct address to send the traces to.
+
 ## Test
 
 To run the tests for the project execute the following:
