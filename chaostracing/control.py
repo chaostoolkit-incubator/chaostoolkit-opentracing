@@ -396,12 +396,11 @@ def create_opentelemetry_tracer(
         )
         headers = kwargs.get(
             "collector_headers",
-            configuration.get(
-                "tracing_opentelemetry_collector_headers", None
-            ),
+            configuration.get("tracing_opentelemetry_collector_headers", None),
         )
         ot_exporter = OTLPSpanExporter(
-            endpoint=collector_endpoint, headers=headers, insecure=insecure)
+            endpoint=collector_endpoint, headers=headers, insecure=insecure
+        )
     elif exporter == "oltp-http":
         from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
             OTLPSpanExporter,
@@ -415,12 +414,9 @@ def create_opentelemetry_tracer(
         )
         headers = kwargs.get(
             "collector_headers",
-            configuration.get(
-                "tracing_opentelemetry_collector_headers", None
-            ),
+            configuration.get("tracing_opentelemetry_collector_headers", None),
         )
-        ot_exporter = OTLPSpanExporter(
-            endpoint=collector_endpoint, headers=headers)
+        ot_exporter = OTLPSpanExporter(endpoint=collector_endpoint, headers=headers)
 
     baggage = kwargs.get(
         "baggage_prefix", configuration.get("tracing_opentelemetry_baggage_prefix")
