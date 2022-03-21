@@ -456,4 +456,5 @@ def _log_kv(key_values: Dict[str, Any], tracer: Any, span: Span):
                 kv[k] = json.dumps(v, indent=False)
             except Exception:
                 pass
+    print(kv)
     span.log_kv(kv)
