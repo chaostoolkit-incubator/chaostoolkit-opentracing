@@ -286,7 +286,10 @@ Use the following configuration:
         "tracing_provider": "opentelemetry",
         "tracing_opentelemetry_exporter": "oltp-http",
         "tracing_opentelemetry_collector_endpoint": "http://localhost:4318",
-        "tracing_opentelemetry_collector_endpoint_insecure": true
+        "tracing_opentelemetry_collector_endpoint_insecure": true,
+        "tracing_opentelemetry_collector_headers": {
+            "My-Header": "My-value"
+        }
     },
     "controls": [
         {
