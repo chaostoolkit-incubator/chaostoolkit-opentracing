@@ -72,15 +72,14 @@ experiment level and the control will be applied to every experiments you run.
 
 ```yaml
 controls:
-  opentracing:
-    provider:
-      type: python
-      module: chaostracing.control
-      arguments:
-        provider: jaeger
-        host: 127.0.0.1
-        port: 6831
-        propagation: b3
+  provider:
+    type: python
+    module: chaostracing.control
+    arguments:
+      tracing_provider: jaeger
+      tracing_host: 127.0.0.1
+      tracing_port: 6831
+      tracing_propagation: b3
 ```
 
 [ctksettings]: https://docs.chaostoolkit.org/reference/usage/cli/#configure-the-chaos-toolkit
