@@ -4,7 +4,7 @@ from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 from opentelemetry.sdk.metrics.export.controller import PushController
 
-__all__ = ["after_experiment_control", "before_experiment_control"]
+__all__ = ["after_experiment_control", "configure_control", "cleanup_control"]
 METER = None
 EXPERIMENT_DURATION = None
 
@@ -20,7 +20,7 @@ def configure_control(
     metrics.set_meter_provider(MeterProvider(shutdown_on_exit=False))
     METER = metrics.get_meter(__name__, True)
     exporter = ConsoleMetricsExporter()
-    controller = PushController(METER, exporter, 1)
+    PushController(METER, exporter, 1)
 
     EXPERIMENT_DURATION = METER.create_valuerecorder(
         name="experiment-duration",
@@ -37,11 +37,3 @@ def after_experiment_control(context: Experiment, state: Journal, **kwargs):
 
 def cleanup_control() -> None:
     METER.shutdown()
-
-
-import time
-
-configure_control()
-after_experiment_control(None, {"duration": 67.9})
-after_experiment_control(None, {"duration": 47.9})
-time.sleep(5)
