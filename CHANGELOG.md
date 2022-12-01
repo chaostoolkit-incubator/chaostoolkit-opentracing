@@ -4,6 +4,10 @@
 
 [Unreleased]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.4.0...HEAD
 
+- Added `exporter` as an argument of the control
+- Read from `OTEL_EXPORTER_OTLP_HEADERS` and `OTEL_EXPORTER_OTLP_ENDPOINT` on OLTP HTTP
+
+
 ## [0.4.0][] - 2022-03-21
 
 [0.4.0]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.3.1...0.4.0

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
+import os
 import time
 from typing import Any, Dict, List, NoReturn, Optional
 
@@ -410,12 +411,16 @@ def create_opentelemetry_tracer(
         collector_endpoint = kwargs.get(
             "collector_endpoint",
             configuration.get(
-                "tracing_opentelemetry_collector_endpoint", "http://localhost:4317"
+                "tracing_opentelemetry_collector_endpoint",
+                os.getenv(
+                    "OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4317")
             ),
         )
         headers = kwargs.get(
             "collector_headers",
-            configuration.get("tracing_opentelemetry_collector_headers", None),
+            configuration.get(
+                "tracing_opentelemetry_collector_headers",
+                os.getenv("OTEL_EXPORTER_OTLP_HEADERS")),
         )
         ot_exporter = OTLPSpanExporter(endpoint=collector_endpoint, headers=headers)
 
