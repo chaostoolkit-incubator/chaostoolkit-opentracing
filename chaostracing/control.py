@@ -342,7 +342,8 @@ def create_opentelemetry_tracer(
     from opentelemetry.shim.opentracing_shim import create_tracer
 
     resource = None
-    exporter = configuration.get("tracing_opentelemetry_exporter")
+    exporter = kwargs.get(
+        "exporter", configuration.get("tracing_opentelemetry_exporter"))
     if exporter not in ["oltp-grpc", "oltp-http", "jaeger-thrift", "jaeger-grpc"]:
         logger.debug("Unsupported opentelemetry shim exporter: {}".format("exporter"))
         return
