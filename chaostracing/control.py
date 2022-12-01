@@ -344,7 +344,8 @@ def create_opentelemetry_tracer(
 
     resource = None
     exporter = kwargs.get(
-        "exporter", configuration.get("tracing_opentelemetry_exporter"))
+        "exporter", configuration.get("tracing_opentelemetry_exporter")
+    )
     if exporter not in ["oltp-grpc", "oltp-http", "jaeger-thrift", "jaeger-grpc"]:
         logger.debug("Unsupported opentelemetry shim exporter: {}".format("exporter"))
         return
@@ -412,15 +413,15 @@ def create_opentelemetry_tracer(
             "collector_endpoint",
             configuration.get(
                 "tracing_opentelemetry_collector_endpoint",
-                os.getenv(
-                    "OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4317")
+                os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4317"),
             ),
         )
         headers = kwargs.get(
             "collector_headers",
             configuration.get(
                 "tracing_opentelemetry_collector_headers",
-                os.getenv("OTEL_EXPORTER_OTLP_HEADERS")),
+                os.getenv("OTEL_EXPORTER_OTLP_HEADERS"),
+            ),
         )
         ot_exporter = OTLPSpanExporter(endpoint=collector_endpoint, headers=headers)
 
