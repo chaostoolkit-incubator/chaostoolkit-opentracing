@@ -2,7 +2,15 @@
 
 ## [Unreleased][]
 
-[Unreleased]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.5.0...HEAD
+[Unreleased]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.5.1...HEAD
+
+## [0.5.1][] - 2022-12-01
+
+[0.5.1]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.5.0...0.5.1
+
+### Changed
+
+- Revert reading headers from environment, leaving that to underlying lib
 
 ## [0.5.0][] - 2022-12-01
 

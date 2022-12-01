@@ -418,10 +418,7 @@ def create_opentelemetry_tracer(
         )
         headers = kwargs.get(
             "collector_headers",
-            configuration.get(
-                "tracing_opentelemetry_collector_headers",
-                os.getenv("OTEL_EXPORTER_OTLP_HEADERS"),
-            ),
+            configuration.get("tracing_opentelemetry_collector_headers"),
         )
         ot_exporter = OTLPSpanExporter(endpoint=collector_endpoint, headers=headers)
 
