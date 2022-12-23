@@ -4,6 +4,10 @@
 
 [Unreleased]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.5.1...HEAD
 
+### Changed
+
+- Metrics control is not implemented yet
+
 ## [0.5.1][] - 2022-12-01
 
 [0.5.1]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.5.0...0.5.1
