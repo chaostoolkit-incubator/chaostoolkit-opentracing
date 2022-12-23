@@ -2,7 +2,11 @@
 
 ## [Unreleased][]
 
-[Unreleased]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.5.1...HEAD
+[Unreleased]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.6.0...HEAD
+
+## [0.6.0][] - 2022-12-01
+
+[0.6.0]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.5.1...0.6.0
 
 ### Changed
 
