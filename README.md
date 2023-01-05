@@ -29,14 +29,84 @@ $ pip install -U chaostoolkit-opentracing
 
 ## Usage
 
-Currently, this extension only provides control support to send traces to
-your provider during the execution of the experiment. It does not yet expose
-any probes or actions per-se.
+This extension provides two controls to trace your Chaos Toolkit experiment:
+
+* Open Telemetry
+* Open Tracing (legacy)
+
+The only supported one is Open Telemetry as the Open Tracing is no longer
+maintained.
+
+### Open Telemetry
+
+To enable Open Telemetry tracing, simply add the following control to
+your experiment:
+
+```json
+{
+    "controls": [
+      {
+          "name": "opentelemetry",
+          "provider": {
+              "type": "python",
+              "module": "chaostracing.oltp"
+          }
+      }
+    ]
+}
+```
+
+We suggest you make it the first extension so it runs before and after all
+other extensions.
+
+To configure the various Open Telemetry settings, please use the standard
+OLTP environment variables:
+
+* the [sdk variables](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/sdk-environment-variables.md)
+* the [exporter variables](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/protocol/exporter.md)
+
+Mostly, you should set:
+
+* `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` to point to your collector (for instance: http://localhost:4318/v1/traces)
+* `OTEL_EXPORTER_OTLP_TRACES_HEADERS` to set any headers to pass to the exporter
+
+NOTE: This extension supports OLTP over HTTP but not gRPC.
+
+You can also instrument a variety of frameworks like this:
+
+
+```json
+{
+    "controls": [
+      {
+          "name": "opentelemetry",
+          "provider": {
+              "type": "python",
+              "module": "chaostracing.oltp",
+              "arguments": {
+                "trace_httpx": true,
+                "trace_requests": true,
+                "trace_botocore": true
+              }
+          }
+      }
+    ]
+}
+```
+
+This will enable the according instrumentation automatically.
+
+
+### Legacy Open Tracing
+
+This extensions supports the [Open Tracing](https://opentracing.io/) export
+format but highly recommends you to switch to Open Telemetry instead. There will
+be no support for Open Tracing support.
 
 NOTE: Please see at the bottom of the page all the supported clients and
 exporters this control supports.
 
-### Declare within the experiment
+#### Declare within the experiment
 
 To use this control, you can declare it on a per experiment basis like this:
 
@@ -63,7 +133,7 @@ To use this control, you can declare it on a per experiment basis like this:
 This will automatically create a [Jaeger][] client to emit traces onto the
 address `127.0.0.1:6831` (over UDP).
 
-### Declare within the settings
+#### Declare within the settings
 
 You may also declare the control to be applied to all experiments by declaring
 the control from within the [Chaos Toolkit settings file][ctksettings]. In that
@@ -86,7 +156,7 @@ controls:
 [ctksettings]: https://docs.chaostoolkit.org/reference/usage/cli/#configure-the-chaos-toolkit
 [jaeger]: https://www.jaegertracing.io/
 
-## Send traces from other extensions
+#### Send traces from other extensions
 
 You may also access the tracer from other extensions as follows.
 
@@ -122,9 +192,9 @@ Please note that, Open Tracing scope cannot be shared across threads
 (while spans can). So, when running this in a background activity, the tracer
 will not actually be set to the one that was initialized.
 
-## Open Tracing Provider Support
+#### Open Tracing Provider Support
 
-### Jaeger tracer
+##### Jaeger tracer
 
 The Jager tracer relies on the OpenTracing protocol which has now be superseded
 by OpenTelemetry. However, we still provide support for it.
@@ -156,239 +226,6 @@ Use the following configuration:
     ]
 }
 ```
-
-## OpenTelemetry provider
-
-To install the baseline dependencies for the OpenTelemetry tracer, please run:
-
-```
-$ pip install -U opentelemetry-api \
-    opentelemetry-sdk \
-    opentelemetry-opentracing-shim
-```
-
-If you want the `b3` [propagator](https://opentelemetry-python.readthedocs.io/en/stable/getting-started.html#configure-your-http-propagator-b3-baggage),
-please also install:
-
-```
-$ pip install opentelemetry-propagator-b3
-```
-
-In that case, in all configurations below, add:
-
-```json
-"tracing_opentelemetry_baggage_prefix": "b3"
-```
-
-#### Jaeger thrift exporter
-
-If you want to export using the Jaeger thrift protocol, please install:
-
-```
-$ pip install opentelemetry-exporter-jaeger-thrift
-```
-
-Use the following configuration:
-
-```json
-{
-    "configuration": {
-        "tracing_provider": "opentelemetry",
-        "tracing_opentelemetry_exporter": "jaeger-thrift",
-        "tracing_host": "127.0.0.1",
-        "tracing_port": 6831
-    },
-    "controls": [
-        {
-            "name": "opentracing",
-            "provider": {
-                "type": "python",
-                "module": "chaostracing.control"
-            }
-        }
-    ]
-}
-```
-
-#### Jaeger grpc exporter
-
-If you want to export using the Jaeger grpc protocol, please install:
-
-```
-$ pip install opentelemetry-exporter-jaeger-proto-grpc
-```
-
-Use the following configuration:
-
-```json
-{
-    "configuration": {
-        "tracing_provider": "opentelemetry",
-        "tracing_opentelemetry_exporter": "jaeger-grpc",
-        "tracing_opentelemetry_collector_endpoint": "localhost:14250",
-        "tracing_opentelemetry_collector_endpoint_insecure": true
-    },
-    "controls": [
-        {
-            "name": "opentracing",
-            "provider": {
-                "type": "python",
-                "module": "chaostracing.control"
-            }
-        }
-    ]
-}
-```
-
-#### OLTP grpc exporter
-
-If you want to export using the OLTP grpc protocol, please install:
-
-```
-$ pip install opentelemetry-exporter-otlp-proto-grpc
-```
-
-Use the following configuration:
-
-```json
-{
-    "configuration": {
-        "tracing_provider": "opentelemetry",
-        "tracing_opentelemetry_exporter": "oltp-grpc",
-        "tracing_opentelemetry_collector_endpoint": "http://localhost:4317",
-        "tracing_opentelemetry_collector_endpoint_insecure": true
-    },
-    "controls": [
-        {
-            "name": "opentracing",
-            "provider": {
-                "type": "python",
-                "module": "chaostracing.control"
-            }
-        }
-    ]
-}
-```
-
-#### OLTP HTTP exporter
-
-If you want to export using the OLTP HTTP protocol, please install:
-
-```
-$ pip install opentelemetry-exporter-otlp-proto-http
-```
-
-Use the following configuration:
-
-```json
-{
-    "configuration": {
-        "tracing_provider": "opentelemetry",
-        "tracing_opentelemetry_exporter": "oltp-http",
-        "tracing_opentelemetry_collector_endpoint": "http://localhost:4318",
-        "tracing_opentelemetry_collector_endpoint_insecure": true,
-        "tracing_opentelemetry_collector_headers": {
-            "My-Header": "My-value"
-        }
-    },
-    "controls": [
-        {
-            "name": "opentracing",
-            "provider": {
-                "type": "python",
-                "module": "chaostracing.control"
-            }
-        }
-    ]
-}
-```
-
-## Run from containers
-
-### From Docker
-
-Create the following Dockerfile:
-
-```
-FROM chaostoolkit/chaostoolkit:latest
-
-RUN pip install --no-cache-dir -q -U chaostoolkit-opentracing jaeger-client 
-```
-
-Obviously adapt the dependencies based on which provider/exporter you want to
-use.
-
-
-Then run this image by mounting your experiment file, for instance, something
-like:
-
-```console
-$ docker run -v `pwd`/experiment.json:/home/svc/experiment.json my-image run experiment.json
-```
-
-Make sure you you correctly set the IP address of the traces agent/collector
-so it can be reached. You can use `localhost` if you link networks between
-containers of course too.
-
-Here is an example of a Dockerfile to create an image with all the
-providers/exporters and their dependencies:
-
-```
-FROM chaostoolkit/chaostoolkit:latest
-
-USER root
-RUN apk add --no-cache --virtual build-deps gcc g++ git libffi-dev linux-headers \
-        python3-dev musl-dev && \
-    apk add libstdc++ && \
-    pip install --no-cache-dir -q -U pip setuptools && \
-    pip install --prefer-binary --no-cache-dir -q -U chaostoolkit \
-    chaostoolkit-opentracing \
-    jaeger-client \
-    opentelemetry-exporter-jaeger-proto-grpc \
-    opentelemetry-api \
-    opentelemetry-sdk \
-    opentelemetry-opentracing-shim && \
-    opentelemetry-propagator-b3 && \
-    apk del build-deps
-USER 1001
-```
-
-### From Kubernetes
-
-Assuming you have a container image with the `chaostoolkit-opentracing`
-extension installed:
-
-
-```yaml
----
-kind: Deployment
-apiVersion: apps/v1
-metadata:
-  name: ctk-tracing
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: ctk-tracing
-  template:
-    metadata:
-      name: ctk-tracing
-      labels:
-        app: ctk-tracing
-    spec:
-      containers:
-      - image: my-image
-        name: ctk-tracing
-        imagePullPolicy: Always
-        command:
-          - /usr/local/bin/chaos
-          - run
-          - https://raw.githubusercontent.com/some/place/experiment.json
-
-```
-
-Obviously you can deliver the experiment as mounted file via volume as well.
-Again, simply make sure you set the correct address to send the traces to.
 
 ## Test
 

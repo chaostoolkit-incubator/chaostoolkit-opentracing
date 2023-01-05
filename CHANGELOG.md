@@ -4,6 +4,11 @@
 
 [Unreleased]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.6.0...HEAD
 
+### Added
+
+- `chaostracing.oltp` contrtol to replace the legacy Open Tracing provider.
+  This should be aligned with new modern approach to tracing.
+
 ## [0.6.0][] - 2022-12-01
 
 [0.6.0]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.5.1...0.6.0
