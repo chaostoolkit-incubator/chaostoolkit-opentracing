@@ -68,7 +68,7 @@ setup_params = dict(
     tests_require=test_require,
     setup_requires=pytest_runner,
     extras_require=extra_requires,
-    python_requires='>=3.6.*'
+    python_requires='>=3.6'
 )
 
 
