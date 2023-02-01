@@ -96,6 +96,18 @@ You can also instrument a variety of frameworks like this:
 
 This will enable the according instrumentation automatically.
 
+If you intend on using Google Cloud Platform to export your traces to, please
+consider also installing the followings:
+
+```
+$ pip install opentelemetry-exporter-gcp-trace \
+    opentelemetry-resourcedetector-gcp \
+    opentelemetry-propagator-gcp
+```
+
+You will also need to point `GOOGLE_APPLICATION_CREDENTIALS` to a service
+account which has the `roles/cloudtrace.agent` role.
+
 
 ### Legacy Open Tracing
 

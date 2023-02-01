@@ -1,4 +1,5 @@
 import json
+import os
 import platform
 import secrets
 from contextlib import ExitStack, contextmanager
@@ -13,10 +14,24 @@ from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExport
 from opentelemetry.instrumentation.botocore import BotocoreInstrumentor
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 from opentelemetry.instrumentation.requests import RequestsInstrumentor
-from opentelemetry.sdk.resources import Resource
+from opentelemetry.propagate import set_global_textmap
+from opentelemetry.sdk.resources import Resource, get_aggregated_resources
 from opentelemetry.sdk.trace import Span, TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.trace import set_span_in_context
+
+try:
+    from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
+    from opentelemetry.propagators.cloud_trace_propagator import (
+        CloudTraceFormatPropagator,
+    )
+    from opentelemetry.resourcedetector.gcp_resource_detector import (
+        GoogleCloudResourceDetector,
+    )
+
+    HAS_GCP_EXPORTER = True
+except ImportError:
+    HAS_GCP_EXPORTER = False
 
 __all__ = [
     "configure_control",
@@ -303,11 +318,28 @@ class OLTPRunEventHandler(RunEventHandler):
 ###############################################################################
 def configure_traces(configuration: Configuration) -> None:
     resource = Resource.create({"service.name": "chaostoolkit"})
-    provider = TracerProvider(resource=resource)
-    exporter = OTLPSpanExporter()
+
+    vendor = configuration.get("otel_vendor", os.getenv("OTEL_VENDOR"))
+    if vendor is None:
+        provider = TracerProvider(resource=resource)
+        exporter = OTLPSpanExporter()
+    elif vendor == "gcp":
+        if not HAS_GCP_EXPORTER:
+            raise RuntimeError(
+                "missing Google Cloud Platform Open Telemetry dependencies. "
+                "See: https://google-cloud-opentelemetry.readthedocs.io/"
+            )
+
+        resources = get_aggregated_resources(
+            [GoogleCloudResourceDetector(raise_on_error=False)],
+            initial_resource=resource,
+        )
+        provider = TracerProvider(resource=resources)
+        exporter = CloudTraceSpanExporter()
+        set_global_textmap(CloudTraceFormatPropagator())
+
     processor = BatchSpanProcessor(exporter)
     provider.add_span_processor(processor)
-
     trace.set_tracer_provider(provider)
     trace.get_tracer(__name__)
 
