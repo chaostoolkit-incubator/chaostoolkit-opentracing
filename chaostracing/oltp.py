@@ -11,9 +11,28 @@ from chaoslib.types import Activity, Configuration, Experiment, Journal, Run, Se
 from logzero import logger
 from opentelemetry import trace
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
-from opentelemetry.instrumentation.botocore import BotocoreInstrumentor
-from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
-from opentelemetry.instrumentation.requests import RequestsInstrumentor
+
+try:
+    from opentelemetry.instrumentation.botocore import BotocoreInstrumentor
+
+    HAS_BOTOCORE = True
+except ImportError:
+    logger.debug("Failed to import BotocoreInstrumentor", exc_info=True)
+    HAS_BOTOCORE = False
+try:
+    from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
+
+    HAS_HTTPX = True
+except ImportError:
+    logger.debug("Failed to import HTTPXClientInstrumentor", exc_info=True)
+    HAS_HTTPX = False
+try:
+    from opentelemetry.instrumentation.requests import RequestsInstrumentor
+
+    HAS_REQUESTS = True
+except ImportError:
+    logger.debug("Failed to import RequestsInstrumentor", exc_info=True)
+    HAS_REQUESTS = False
 from opentelemetry.propagate import set_global_textmap
 from opentelemetry.sdk.resources import Resource, get_aggregated_resources
 from opentelemetry.sdk.trace import Span, TracerProvider
@@ -352,13 +371,22 @@ def configure_instrumentations(
     provider = trace.get_tracer_provider()
 
     if trace_request:
-        RequestsInstrumentor().instrument(tracer_provider=provider)
+        if not HAS_REQUESTS:
+            logger.debug("Cannot trace requests has its missing some dependency")
+        else:
+            RequestsInstrumentor().instrument(tracer_provider=provider)
 
     if trace_httpx:
-        HTTPXClientInstrumentor().instrument(tracer_provider=provider)
+        if not HAS_HTTPX:
+            logger.debug("Cannot trace httpx has its missing some dependency")
+        else:
+            HTTPXClientInstrumentor().instrument(tracer_provider=provider)
 
     if trace_botocore:
-        BotocoreInstrumentor().instrument(tracer_provider=provider)
+        if not HAS_HTTPX:
+            logger.debug("Cannot trace botocore has its missing some dependency")
+        else:
+            BotocoreInstrumentor().instrument(tracer_provider=provider)
 
 
 @contextmanager
