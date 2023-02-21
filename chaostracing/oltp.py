@@ -40,6 +40,12 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.trace import set_span_in_context
 
 try:
+    from google.cloud.trace_v2 import TraceServiceClient
+    from google.cloud.trace_v2.services.trace_service.transports import (
+        TraceServiceGrpcTransport,
+    )
+    from google.oauth2.service_account import Credentials
+    from opentelemetry.exporter.cloud_trace import _OPTIONS as GCP_TRACE_OPTIONS
     from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
     from opentelemetry.propagators.cloud_trace_propagator import (
         CloudTraceFormatPropagator,
@@ -61,6 +67,9 @@ __all__ = [
 REGISTRY_HANDLER = None
 
 
+logger.info("KABOOOM")
+
+
 def configure_control(
     experiment: Experiment,
     event_registry: EventHandlerRegistry,
@@ -71,6 +80,7 @@ def configure_control(
     secrets: Secrets = None,
     **kwargs: Any,
 ) -> None:
+    logger.info("BOOOM")
     configure_traces(configuration)
     configure_instrumentations(trace_request, trace_httpx, trace_botocore)
 
@@ -349,12 +359,27 @@ def configure_traces(configuration: Configuration) -> None:
                 "See: https://google-cloud-opentelemetry.readthedocs.io/"
             )
 
+        configuration = configuration or {}
+        service_account = configuration.get("otel_gcp_service_account")
+        project_id = configuration.get("otel_gcp_project_id")
+        if service_account and os.path.isfile(service_account):
+            credentials = Credentials.from_service_account_file(service_account)
+            project_id = credentials.project_id
+            tsc = TraceServiceClient(
+                credentials=credentials,
+                transport=TraceServiceGrpcTransport(
+                    channel=TraceServiceGrpcTransport.create_channel(
+                        options=GCP_TRACE_OPTIONS
+                    )
+                ),
+            )
+
         resources = get_aggregated_resources(
             [GoogleCloudResourceDetector(raise_on_error=False)],
             initial_resource=resource,
         )
         provider = TracerProvider(resource=resources)
-        exporter = CloudTraceSpanExporter()
+        exporter = CloudTraceSpanExporter(project_id=project_id, client=tsc)
         set_global_textmap(CloudTraceFormatPropagator())
 
     processor = BatchSpanProcessor(exporter)

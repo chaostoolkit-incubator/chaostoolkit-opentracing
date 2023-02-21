@@ -2,7 +2,15 @@
 
 ## [Unreleased][]
 
-[Unreleased]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.8.2...HEAD
+[Unreleased]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.9.0...HEAD
+
+## [0.9.0][] - 2023-02-21
+
+[0.9.0]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.8.2...0.9.0
+
+### Added
+
+- Pass GCP service account to OLTP client
 
 ## [0.8.2][] - 2023-02-03
 

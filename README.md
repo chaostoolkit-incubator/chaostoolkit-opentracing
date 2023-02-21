@@ -105,9 +105,14 @@ $ pip install opentelemetry-exporter-gcp-trace \
     opentelemetry-propagator-gcp
 ```
 
-You will also need to point `GOOGLE_APPLICATION_CREDENTIALS` to a service
-account which has the `roles/cloudtrace.agent` role.
+To authenticate the client, you can either:
 
+* set `GOOGLE_APPLICATION_CREDENTIALS` 
+* pass the `otel_gcp_service_account` and `otel_gcp_project_id` variables
+  in the configuration block
+
+In both cases, point to a service account which has
+the `roles/cloudtrace.agent` role.
 
 ### Legacy Open Tracing
 
