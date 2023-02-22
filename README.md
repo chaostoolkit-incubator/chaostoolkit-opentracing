@@ -96,6 +96,8 @@ You can also instrument a variety of frameworks like this:
 
 This will enable the according instrumentation automatically.
 
+#### Google Cloud Platform Traces
+
 If you intend on using Google Cloud Platform to export your traces to, please
 consider also installing the followings:
 
@@ -107,12 +109,13 @@ $ pip install opentelemetry-exporter-gcp-trace \
 
 To authenticate the client, you can either:
 
-* set `GOOGLE_APPLICATION_CREDENTIALS` 
+* set `GOOGLE_APPLICATION_CREDENTIALS` environment variable
 * pass the `otel_gcp_service_account` and `otel_gcp_project_id` variables
   in the configuration block
+* set the `CHAOSTOOLKIT_OTEL_GCP_SA` and `CHAOSTOOLKIT_OTEL_GCP_PROJECT_ID` environment variables
 
-In both cases, point to a service account which has
-the `roles/cloudtrace.agent` role.
+In all cases, point to a service account which has
+the `roles/cloudtrace.agent` role as nthe name of the target project.
 
 ### Legacy Open Tracing
 

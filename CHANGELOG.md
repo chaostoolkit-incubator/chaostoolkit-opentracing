@@ -2,7 +2,20 @@
 
 ## [Unreleased][]
 
-[Unreleased]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.9.0...HEAD
+[Unreleased]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.9.1...HEAD
+
+## [0.9.1][] - 2023-02-22
+
+[0.9.1]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.9.0...0.9.1
+
+### Fixed
+
+- Missing variable declaration for GCP
+
+### Added
+
+- The `CHAOSTOOLKIT_OTEL_GCP_SA` and `CHAOSTOOLKIT_OTEL_GCP_PROJECT_ID`
+  environment variables to pass the information of the target project
 
 ## [0.9.0][] - 2023-02-21
 

@@ -67,9 +67,6 @@ __all__ = [
 REGISTRY_HANDLER = None
 
 
-logger.info("KABOOOM")
-
-
 def configure_control(
     experiment: Experiment,
     event_registry: EventHandlerRegistry,
@@ -80,7 +77,6 @@ def configure_control(
     secrets: Secrets = None,
     **kwargs: Any,
 ) -> None:
-    logger.info("BOOOM")
     configure_traces(configuration)
     configure_instrumentations(trace_request, trace_httpx, trace_botocore)
 
@@ -359,9 +355,15 @@ def configure_traces(configuration: Configuration) -> None:
                 "See: https://google-cloud-opentelemetry.readthedocs.io/"
             )
 
+        tsc = None
+
         configuration = configuration or {}
-        service_account = configuration.get("otel_gcp_service_account")
-        project_id = configuration.get("otel_gcp_project_id")
+        service_account = configuration.get(
+            "otel_gcp_service_account", os.getenv("CHAOSTOOLKIT_OTEL_GCP_SA")
+        )
+        project_id = configuration.get(
+            "otel_gcp_project_id", os.getenv("CHAOSTOOLKIT_OTEL_GCP_PROJECT_ID")
+        )
         if service_account and os.path.isfile(service_account):
             credentials = Credentials.from_service_account_file(service_account)
             project_id = credentials.project_id
