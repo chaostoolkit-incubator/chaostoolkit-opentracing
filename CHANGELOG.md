@@ -2,7 +2,15 @@
 
 ## [Unreleased][]
 
-[Unreleased]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.9.1...HEAD
+[Unreleased]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.10.0...HEAD
+
+## [0.10.0][] - 2023-04-12
+
+[0.10.0]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.9.1...0.10.0
+
+### Added
+
+- Added specific support for AWS
 
 ## [0.9.1][] - 2023-02-22
 

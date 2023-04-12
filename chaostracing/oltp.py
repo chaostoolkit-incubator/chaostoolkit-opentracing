@@ -58,6 +58,16 @@ try:
 except ImportError:
     HAS_GCP_EXPORTER = False
 
+try:
+    from opentelemetry.propagators.aws import AwsXRayPropagator
+    from opentelemetry.sdk.extension.aws.resource.ec2 import AwsEc2ResourceDetector
+    from opentelemetry.sdk.extension.aws.trace import AwsXRayIdGenerator
+
+    HAS_AWS_EXPORTER = True
+except ImportError:
+    HAS_AWS_EXPORTER = False
+
+
 __all__ = [
     "configure_control",
     "before_activity_control",
@@ -383,6 +393,21 @@ def configure_traces(configuration: Configuration) -> None:
         provider = TracerProvider(resource=resources)
         exporter = CloudTraceSpanExporter(project_id=project_id, client=tsc)
         set_global_textmap(CloudTraceFormatPropagator())
+    elif vendor == "aws":
+        if not HAS_AWS_EXPORTER:
+            raise RuntimeError(
+                "missing AWS Open Telemetry dependencies. "
+                "See: https://aws-otel.github.io/docs/getting-started/python-sdk"
+            )
+
+        resources = get_aggregated_resources(
+            [AwsEc2ResourceDetector()],
+            initial_resource=resource,
+        )
+        provider = TracerProvider(
+            resources=resources, id_generator=AwsXRayIdGenerator()
+        )
+        set_global_textmap(AwsXRayPropagator())
 
     processor = BatchSpanProcessor(exporter)
     provider.add_span_processor(processor)
