@@ -96,6 +96,26 @@ You can also instrument a variety of frameworks like this:
 
 This will enable the according instrumentation automatically.
 
+#### AWS
+
+This extension supports AWS X-Ray directly. Simply set the following 
+variable:
+
+```
+export OTEL_VENDOR=aws
+```
+
+This can also be set in the configuration block:
+
+```json
+{
+    "configuration": {
+        "otel_vendor": "aws"
+    }
+}
+```
+
+
 #### Google Cloud Platform Traces
 
 If you intend on using Google Cloud Platform to export your traces to, please
@@ -117,6 +137,22 @@ To authenticate the client, you can either:
 In all cases, point to a service account which has
 the `roles/cloudtrace.agent` role as nthe name of the target project.
 
+Finally, set the following variable:
+
+```
+export OTEL_VENDOR=gcp
+```
+
+This can also be set in the configuration block:
+
+```json
+{
+    "configuration": {
+        "otel_vendor": "gcp"
+    }
+}
+```
+
 #### Azure Traces
 
 To use this package to send traces to Azure monitors, please install the
@@ -129,11 +165,33 @@ $ pip install chaostoolkit-opentracing[azure]
 Then set the `APPLICATIONINSIGHTS_CONNECTION_STRING` environment variable
 appropriately.
 
+
+Finally, set the following variable:
+
+```
+export OTEL_VENDOR=azure
+```
+
+This can also be set in the configuration block:
+
+```json
+{
+    "configuration": {
+        "otel_vendor": "azure"
+    }
+}
+```
+
 See Azure documentation for more details:
 
 * https://learn.microsoft.com/en-us/python/api/overview/azure/core-tracing-opentelemetry-readme
 * https://learn.microsoft.com/en-us/python/api/overview/azure/monitor-opentelemetry-exporter-readme
 
+
+#### Other Open Telemetry vendors
+
+Other vendors should work out of the box with the default settings. Otherwise,
+feel free to open an issue.
 
 ### Legacy Open Tracing
 
