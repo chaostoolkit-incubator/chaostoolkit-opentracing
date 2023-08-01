@@ -10,7 +10,7 @@ install-dev: install
 
 .PHONY: lint
 lint:
-	flake8 chaostracing/ tests/
+	ruff chaostracing/ tests/
 	isort --check-only --profile black chaostracing/ tests/
 	black --check --diff chaostracing/ tests/
 
@@ -18,6 +18,7 @@ lint:
 format:
 	isort --profile black chaostracing/ tests/
 	black chaostracing/ tests/
+	ruff chaostracing --fix
 
 .PHONY: tests
 tests:

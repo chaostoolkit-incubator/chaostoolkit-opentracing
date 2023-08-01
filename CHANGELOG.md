@@ -4,6 +4,10 @@
 
 [Unreleased]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.10.0...HEAD
 
+### Changed
+
+- Switched from flake8/pycodestyle to ruff
+
 ## [0.10.0][] - 2023-04-12
 
 [0.10.0]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.9.1...0.10.0
