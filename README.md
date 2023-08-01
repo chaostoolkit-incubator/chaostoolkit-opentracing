@@ -117,6 +117,24 @@ To authenticate the client, you can either:
 In all cases, point to a service account which has
 the `roles/cloudtrace.agent` role as nthe name of the target project.
 
+#### Azure Traces
+
+To use this package to send traces to Azure monitors, please install the
+dependencies as follows:
+
+```
+$ pip install chaostoolkit-opentracing[azure]
+```
+
+Then set the `APPLICATIONINSIGHTS_CONNECTION_STRING` environment variable
+appropriately.
+
+See Azure documentation for more details:
+
+* https://learn.microsoft.com/en-us/python/api/overview/azure/core-tracing-opentelemetry-readme
+* https://learn.microsoft.com/en-us/python/api/overview/azure/monitor-opentelemetry-exporter-readme
+
+
 ### Legacy Open Tracing
 
 This extensions supports the [Open Tracing](https://opentracing.io/) export

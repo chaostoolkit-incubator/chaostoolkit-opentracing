@@ -68,6 +68,16 @@ except ImportError:
     HAS_AWS_EXPORTER = False
 
 
+try:
+    from azure.core.settings import settings
+    from azure.core.tracing.ext.opentelemetry_span import OpenTelemetrySpan
+    from azure.monitor.opentelemetry.exporter import AzureMonitorTraceExporter
+
+    HAS_AZURE_EXPORTER = True
+except ImportError:
+    HAS_AZURE_EXPORTER = False
+
+
 __all__ = [
     "configure_control",
     "before_activity_control",
@@ -408,6 +418,15 @@ def configure_traces(configuration: Configuration) -> None:
             resources=resources, id_generator=AwsXRayIdGenerator()
         )
         set_global_textmap(AwsXRayPropagator())
+    elif vendor == "azure":
+        if not HAS_AZURE_EXPORTER:
+            raise RuntimeError(
+                "missing Azure Open Telemetry dependencies. "
+                "See: https://learn.microsoft.com/en-us/python/api/overview/azure/core-tracing-opentelemetry-readme"  # noqa
+            )
+
+        settings.tracing_implementation = OpenTelemetrySpan
+        exporter = AzureMonitorTraceExporter()
 
     processor = BatchSpanProcessor(exporter)
     provider.add_span_processor(processor)

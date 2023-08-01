@@ -4,6 +4,10 @@
 
 [Unreleased]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.10.0...HEAD
 
+### Added
+
+- Added specific support for Azure. Install the dependencies with `pip install chaostoolkit-opentracing[azure]`
+
 ### Changed
 
 - Switched from flake8/pycodestyle to ruff

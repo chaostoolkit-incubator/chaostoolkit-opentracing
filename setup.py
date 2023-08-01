@@ -49,7 +49,12 @@ install_require = []
 with io.open('requirements.txt') as f:
     install_require = [l.strip() for l in f if not l.startswith('#')]
 
-extra_requires = {}
+extra_requires = {
+    "azure": [
+        "azure-core-tracing-opentelemetry",
+        "azure-monitor-opentelemetry-exporter",
+    ]
+}
 
 setup_params = dict(
     name=name,
