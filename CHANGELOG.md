@@ -7,6 +7,7 @@
 ### Changed
 
 - Respect `OTEL_SERVICE_NAME` when set
+- Fixed check on whether or not botocore is installed
 
 ## [0.11.0][] - 2023-08-02
 

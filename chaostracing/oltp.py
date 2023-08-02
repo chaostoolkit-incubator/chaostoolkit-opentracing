@@ -456,7 +456,7 @@ def configure_instrumentations(
             HTTPXClientInstrumentor().instrument(tracer_provider=provider)
 
     if trace_botocore:
-        if not HAS_HTTPX:
+        if not HAS_BOTOCORE:
             logger.debug("Cannot trace botocore has its missing some dependency")
         else:
             BotocoreInstrumentor().instrument(tracer_provider=provider)
