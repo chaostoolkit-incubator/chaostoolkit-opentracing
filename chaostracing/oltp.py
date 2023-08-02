@@ -365,10 +365,7 @@ def configure_traces(configuration: Configuration) -> None:
     resource = Resource.create({"service.name": "chaostoolkit"})
 
     vendor = configuration.get("otel_vendor", os.getenv("OTEL_VENDOR"))
-    if vendor is None:
-        provider = TracerProvider(resource=resource)
-        exporter = OTLPSpanExporter()
-    elif vendor == "gcp":
+    if vendor == "gcp":
         if not HAS_GCP_EXPORTER:
             raise RuntimeError(
                 "missing Google Cloud Platform Open Telemetry dependencies. "
@@ -427,6 +424,9 @@ def configure_traces(configuration: Configuration) -> None:
 
         settings.tracing_implementation = OpenTelemetrySpan
         exporter = AzureMonitorTraceExporter()
+    else:
+        provider = TracerProvider(resource=resource)
+        exporter = OTLPSpanExporter()
 
     processor = BatchSpanProcessor(exporter)
     provider.add_span_processor(processor)

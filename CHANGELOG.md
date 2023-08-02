@@ -11,6 +11,7 @@
 ### Changed
 
 - Switched from flake8/pycodestyle to ruff
+- Ensure there is always a good default for exporting
 
 ## [0.10.0][] - 2023-04-12
 
