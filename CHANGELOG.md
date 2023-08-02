@@ -4,6 +4,10 @@
 
 [Unreleased]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.11.0...HEAD
 
+### Changed
+
+- Respect `OTEL_SERVICE_NAME` when set
+
 ## [0.11.0][] - 2023-08-02
 
 [0.11.0]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.10.0...0.11.0

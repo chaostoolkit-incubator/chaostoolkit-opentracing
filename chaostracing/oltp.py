@@ -362,7 +362,9 @@ class OLTPRunEventHandler(RunEventHandler):
 # Private functions
 ###############################################################################
 def configure_traces(configuration: Configuration) -> None:
-    resource = Resource.create({"service.name": "chaostoolkit"})
+    resource = Resource.create(
+        {"service.name": os.getenv("OTEL_SERVICE_NAME", "chaostoolkit")}
+    )
 
     vendor = configuration.get("otel_vendor", os.getenv("OTEL_VENDOR"))
     if vendor == "gcp":
