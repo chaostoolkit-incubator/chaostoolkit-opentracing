@@ -33,6 +33,13 @@ try:
 except ImportError:
     logger.debug("Failed to import RequestsInstrumentor", exc_info=True)
     HAS_REQUESTS = False
+try:
+    from opentelemetry.instrumentation.urllib3 import URLLib3Instrumentor
+
+    HAS_URLLIB3 = True
+except ImportError:
+    logger.debug("Failed to import URLLib3Instrumentor", exc_info=True)
+    HAS_URLLIB3 = False
 from opentelemetry.propagate import set_global_textmap
 from opentelemetry.sdk.resources import Resource, get_aggregated_resources
 from opentelemetry.sdk.trace import Span, TracerProvider
@@ -152,6 +159,7 @@ class OLTPRunEventHandler(RunEventHandler):
         self.current_span = None
 
     def started(self, experiment: Experiment, journal: Journal) -> None:
+        logger.debug("Starting capturing OLTP traces")
         stack = ExitStack()
         span = stack.enter_context(new_span("experiment"))
         span.set_attribute("chaostoolkit.experiment.title", experiment.get("title"))
@@ -162,6 +170,8 @@ class OLTPRunEventHandler(RunEventHandler):
         self.current_span = span
 
     def finish(self, journal: Journal) -> None:
+        logger.debug("Stopping capturing OLTP traces")
+
         span = self.root_span
         self.root_span = None
 
@@ -169,6 +179,8 @@ class OLTPRunEventHandler(RunEventHandler):
         span.set_attribute("chaostoolkit.experiment.deviated", journal.get("deviated"))
 
         self.root_stack.close()
+
+        logger.debug("Finished capturing OLTP traces")
 
     def interrupted(self, experiment: Experiment, journal: Journal) -> None:
         self.root_span.set_attribute("chaostoolkit.experiment.interrupted", True)
@@ -439,7 +451,10 @@ def configure_traces(configuration: Configuration) -> None:
 
 
 def configure_instrumentations(
-    trace_request: bool = False, trace_httpx: bool = False, trace_botocore: bool = False
+    trace_request: bool = False,
+    trace_httpx: bool = False,
+    trace_botocore: bool = False,
+    trace_urllib3: bool = False,
 ) -> None:
     provider = trace.get_tracer_provider()
 
@@ -460,6 +475,12 @@ def configure_instrumentations(
             logger.debug("Cannot trace botocore has its missing some dependency")
         else:
             BotocoreInstrumentor().instrument(tracer_provider=provider)
+
+    if trace_urllib3:
+        if not HAS_URLLIB3:
+            logger.debug("Cannot trace urllib3 has its missing some dependency")
+        else:
+            URLLib3Instrumentor().instrument(tracer_provider=provider)
 
 
 @contextmanager
