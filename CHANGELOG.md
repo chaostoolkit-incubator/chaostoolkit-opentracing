@@ -2,7 +2,15 @@
 
 ## [Unreleased][]
 
-[Unreleased]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.13.0...HEAD
+[Unreleased]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.13.1...HEAD
+
+## [0.13.1][] - 2023-08-02
+
+[0.13.1]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.13.0...0.13.1
+
+### Fixed
+
+- Pass `trace_urllib3` to oltp control
 
 ## [0.13.0][] - 2023-08-02
 

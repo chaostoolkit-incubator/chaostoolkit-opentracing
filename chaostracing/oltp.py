@@ -98,12 +98,15 @@ def configure_control(
     trace_request: bool = False,
     trace_httpx: bool = False,
     trace_botocore: bool = False,
+    trace_urllib3: bool = False,
     configuration: Configuration = None,
     secrets: Secrets = None,
     **kwargs: Any,
 ) -> None:
     configure_traces(configuration)
-    configure_instrumentations(trace_request, trace_httpx, trace_botocore)
+    configure_instrumentations(
+        trace_request, trace_httpx, trace_botocore, trace_urllib3
+    )
 
     global REGISTRY_HANDLER
     REGISTRY_HANDLER = OLTPRunEventHandler()
