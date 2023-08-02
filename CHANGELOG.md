@@ -4,6 +4,14 @@
 
 [Unreleased]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.12.0...HEAD
 
+### Added
+
+- Automatic tracing of urllib3
+
+### Changed
+
+- Do not explicitly call tracing on activities, chaoslib does it for us now
+
 ## [0.12.0][] - 2023-08-02
 
 [0.12.0]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.11.0...0.12.0

@@ -87,8 +87,6 @@ except ImportError:
 
 __all__ = [
     "configure_control",
-    "before_activity_control",
-    "after_activity_control",
 ]
 
 REGISTRY_HANDLER = None
@@ -112,25 +110,6 @@ def configure_control(
     event_registry.register(REGISTRY_HANDLER)
 
     REGISTRY_HANDLER.started(experiment, None)
-
-
-def before_activity_control(
-    context: Activity,
-    configuration: Configuration = None,
-    secrets: Secrets = None,
-    **kwargs: Any,
-) -> None:
-    REGISTRY_HANDLER.start_activity(context)
-
-
-def after_activity_control(
-    context: Activity,
-    state: Run,
-    configuration: Configuration = None,
-    secrets: Secrets = None,
-    **kwargs: Any,
-) -> None:
-    REGISTRY_HANDLER.activity_completed(context, state)
 
 
 class OLTPRunEventHandler(RunEventHandler):
