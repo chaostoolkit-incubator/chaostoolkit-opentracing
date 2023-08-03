@@ -2,7 +2,16 @@
 
 ## [Unreleased][]
 
-[Unreleased]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.13.1...HEAD
+[Unreleased]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.13.2..HEAD
+
+## [0.13.2][] - 2023-08-03
+
+[0.13.2]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.13.1...0.13.2
+
+### Fixed
+
+- Trap `AttributeError` when loading httpx. This can happen from a locust
+  file as they are relying on gevent heavily which changes the socket module
 
 ## [0.13.1][] - 2023-08-02
 
