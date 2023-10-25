@@ -23,7 +23,15 @@ try:
     from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 
     HAS_HTTPX = True
-except (AttributeError, ImportError):
+except AttributeError:
+    logger.debug(
+        "Failed to import HTTPXClientInstrumentor. Likely because you run from "
+        "a gevent monkeypatched environment. You can ignore this if that's the"
+        "case, but you cannot instrument httpx unfortunately.",
+        exc_info=True,
+    )
+    HAS_HTTPX = False
+except ImportError:
     logger.debug("Failed to import HTTPXClientInstrumentor", exc_info=True)
     HAS_HTTPX = False
 try:
