@@ -155,6 +155,11 @@ class OLTPRunEventHandler(RunEventHandler):
         span.set_attribute("chaostoolkit.experiment.title", experiment.get("title"))
         span.set_attribute("chaostoolkit.platform.full", platform.platform())
 
+        try:
+            span.set_attributes(baggage.get_all())
+        except Exception:
+            logger.debug("Failed to inject OTLP baggage into root span", exc_info=True)
+
         self.root_stack = stack
         self.root_span = span
         self.current_span = span
