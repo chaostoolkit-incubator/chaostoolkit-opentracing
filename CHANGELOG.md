@@ -9,6 +9,11 @@
 - Make the `AttributeError` from importing HTTPXInstrument silent because
   it will usually occur when a `gevent` environment only
 
+### Added
+
+- Inject bagage into root span
+- Build for Python 3.11 and 3.12
+
 ## [0.13.2][] - 2023-08-03
 
 [0.13.2]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.13.1...0.13.2
