@@ -9,7 +9,7 @@ from typing import Any, Dict, Iterator
 from chaoslib.run import EventHandlerRegistry, RunEventHandler
 from chaoslib.types import Activity, Configuration, Experiment, Journal, Run, Secrets
 from logzero import logger
-from opentelemetry import trace
+from opentelemetry import baggage, trace
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 
 try:
@@ -149,7 +149,7 @@ class OLTPRunEventHandler(RunEventHandler):
         self.current_span = None
 
     def started(self, experiment: Experiment, journal: Journal) -> None:
-        logger.debug("Starting capturing OLTP traces")
+        logger.debug("Starting capturing OpenTelemetry traces")
         stack = ExitStack()
         span = stack.enter_context(new_span("experiment"))
         span.set_attribute("chaostoolkit.experiment.title", experiment.get("title"))
@@ -160,7 +160,7 @@ class OLTPRunEventHandler(RunEventHandler):
         self.current_span = span
 
     def finish(self, journal: Journal) -> None:
-        logger.debug("Stopping capturing OLTP traces")
+        logger.debug("Stopping capturing OpenTelemetry traces")
 
         span = self.root_span
         self.root_span = None
@@ -170,7 +170,7 @@ class OLTPRunEventHandler(RunEventHandler):
 
         self.root_stack.close()
 
-        logger.debug("Finished capturing OLTP traces")
+        logger.debug("Finished capturing OpenTelemetry traces")
 
     def interrupted(self, experiment: Experiment, journal: Journal) -> None:
         self.root_span.set_attribute("chaostoolkit.experiment.interrupted", True)
