@@ -2,7 +2,18 @@
 
 ## [Unreleased][]
 
-[Unreleased]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.14.0..HEAD
+[Unreleased]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.15.0..HEAD
+
+## [0.15.0][] - 2023-12-01
+
+[0.15.0]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.14.0...0.15.0
+
+### Fixed
+
+- Pin opentelemetry-exporter-prometheus>=0.36b0 as the previous pinned versions
+  have been yanked from Pypi [#3521][3521]
+
+[3521]: https://github.com/open-telemetry/opentelemetry-python/issues/3521
 
 ## [0.14.0][] - 2023-11-09
 
