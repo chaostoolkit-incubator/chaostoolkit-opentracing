@@ -2,7 +2,16 @@
 
 ## [Unreleased][]
 
-[Unreleased]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.15.0..HEAD
+[Unreleased]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.16.0..HEAD
+
+
+## [0.16.0][] - 2023-12-18
+
+[0.16.0]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.15.0...0.16.0
+
+### Fixed
+
+- Pin opentelemetry-instrumentation-botocore>=0.36b0 to pick correct version
 
 ## [0.15.0][] - 2023-12-01
 
