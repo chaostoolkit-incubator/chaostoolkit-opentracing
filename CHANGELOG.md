@@ -2,8 +2,16 @@
 
 ## [Unreleased][]
 
-[Unreleased]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.16.0..HEAD
+[Unreleased]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.16.1..HEAD
 
+
+## [0.16.1][] - 2023-12-18
+
+[0.16.1]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.16.0...0.16.1
+
+### Fixed
+
+- Hopefully fixing dependency tree of opentelemetry packages (what a mess)
 
 ## [0.16.0][] - 2023-12-18
 
