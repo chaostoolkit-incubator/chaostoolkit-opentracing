@@ -236,7 +236,7 @@ class OLTPRunEventHandler(RunEventHandler):
                     f"activity: {activity_name}", span, start_time=child_start_ts, end_on_exit=False
                 ) as child:
                     activity = probe["activity"]
-                    child.set_attribute("chaostoolkit.activity.name", activity["name"])
+                    child.set_attribute("chaostoolkit.activity.name", activity_name)
                     child.set_attribute(
                         "chaostoolkit.activity.background",
                         activity.get("background", False),
