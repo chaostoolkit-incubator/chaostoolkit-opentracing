@@ -4,6 +4,11 @@
 
 [Unreleased]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.16.1..HEAD
 
+### Fixed
+
+- Added the ctk activity name in activity spans to enrich the user readability in backend tracing systems. [#5][ctk-opentracing-5]
+
+[ctk-opentracing-5]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/issues/5
 
 ## [0.16.1][] - 2023-12-18
 
