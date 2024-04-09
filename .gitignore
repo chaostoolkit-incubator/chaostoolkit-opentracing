@@ -103,3 +103,7 @@ ENV/
 .DS_Store
 junit-test-results.xml
 .vscode/
+
+# PDM
+.pdm-python
+.pdm-build/

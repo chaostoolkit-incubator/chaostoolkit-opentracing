@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import platform
 import secrets
@@ -7,10 +8,20 @@ from datetime import datetime, timezone
 from typing import Any, Dict, Iterator
 
 from chaoslib.run import EventHandlerRegistry, RunEventHandler
-from chaoslib.types import Activity, Configuration, Experiment, Journal, Run, Secrets
-from logzero import logger
+from chaoslib.types import (
+    Activity,
+    Configuration,
+    Experiment,
+    Journal,
+    Run,
+    Secrets,
+)
 from opentelemetry import baggage, trace
-from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
+    OTLPSpanExporter,
+)
+
+logger = logging.getLogger("chaostoolkit")
 
 try:
     from opentelemetry.instrumentation.botocore import BotocoreInstrumentor
@@ -48,11 +59,11 @@ try:
 except ImportError:
     logger.debug("Failed to import URLLib3Instrumentor", exc_info=True)
     HAS_URLLIB3 = False
-from opentelemetry.propagate import set_global_textmap
-from opentelemetry.sdk.resources import Resource, get_aggregated_resources
-from opentelemetry.sdk.trace import Span, TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.trace import set_span_in_context
+from opentelemetry.propagate import set_global_textmap  # noqa: E402
+from opentelemetry.sdk.resources import Resource, get_aggregated_resources  # noqa: E402
+from opentelemetry.sdk.trace import Span, TracerProvider  # noqa: E402
+from opentelemetry.sdk.trace.export import BatchSpanProcessor  # noqa: E402
+from opentelemetry.trace import set_span_in_context  # noqa: E402
 
 try:
     from google.cloud.trace_v2 import TraceServiceClient
@@ -75,7 +86,9 @@ except ImportError:
 
 try:
     from opentelemetry.propagators.aws import AwsXRayPropagator
-    from opentelemetry.sdk.extension.aws.resource.ec2 import AwsEc2ResourceDetector
+    from opentelemetry.sdk.extension.aws.resource.ec2 import (
+        AwsEc2ResourceDetector,
+    )
     from opentelemetry.sdk.extension.aws.trace import AwsXRayIdGenerator
 
     HAS_AWS_EXPORTER = True
@@ -152,13 +165,17 @@ class OLTPRunEventHandler(RunEventHandler):
         logger.debug("Starting capturing OpenTelemetry traces")
         stack = ExitStack()
         span = stack.enter_context(new_span("experiment"))
-        span.set_attribute("chaostoolkit.experiment.title", experiment.get("title"))
+        span.set_attribute(
+            "chaostoolkit.experiment.title", experiment.get("title")
+        )
         span.set_attribute("chaostoolkit.platform.full", platform.platform())
 
         try:
             span.set_attributes(baggage.get_all())
         except Exception:
-            logger.debug("Failed to inject OTLP baggage into root span", exc_info=True)
+            logger.debug(
+                "Failed to inject OTLP baggage into root span", exc_info=True
+            )
 
         self.root_stack = stack
         self.root_span = span
@@ -170,18 +187,26 @@ class OLTPRunEventHandler(RunEventHandler):
         span = self.root_span
         self.root_span = None
 
-        span.set_attribute("chaostoolkit.experiment.status", journal.get("status"))
-        span.set_attribute("chaostoolkit.experiment.deviated", journal.get("deviated"))
+        span.set_attribute(
+            "chaostoolkit.experiment.status", journal.get("status")
+        )
+        span.set_attribute(
+            "chaostoolkit.experiment.deviated", journal.get("deviated")
+        )
 
         self.root_stack.close()
 
         logger.debug("Finished capturing OpenTelemetry traces")
 
     def interrupted(self, experiment: Experiment, journal: Journal) -> None:
-        self.root_span.set_attribute("chaostoolkit.experiment.interrupted", True)
+        self.root_span.set_attribute(
+            "chaostoolkit.experiment.interrupted", True
+        )
 
     def signal_exit(self) -> None:
-        self.root_span.set_attribute("chaostoolkit.experiment.exit_signal", True)
+        self.root_span.set_attribute(
+            "chaostoolkit.experiment.exit_signal", True
+        )
 
     def start_continuous_hypothesis(self, frequency: int) -> None:
         stack = ExitStack()
@@ -191,7 +216,9 @@ class OLTPRunEventHandler(RunEventHandler):
         self.continuous_stack = stack
         self.continuous_span = span
 
-    def continuous_hypothesis_iteration(self, iteration_index: int, state: Any) -> None:
+    def continuous_hypothesis_iteration(
+        self, iteration_index: int, state: Any
+    ) -> None:
         first_probe = state.get("probes")[0]
         start_time = first_probe["start"]
         end_time = first_probe["end"]
@@ -210,10 +237,15 @@ class OLTPRunEventHandler(RunEventHandler):
         )
 
         with new_span(
-            "hypothesis", self.continuous_span, start_time=start_ts, end_on_exit=False
+            "hypothesis",
+            self.continuous_span,
+            start_time=start_ts,
+            end_on_exit=False,
         ) as span:
             span.set_attribute("chaostoolkit.hypothesis.phase", "continuous")
-            span.set_attribute("chaostoolkit.hypothesis.iteration", iteration_index)
+            span.set_attribute(
+                "chaostoolkit.hypothesis.iteration", iteration_index
+            )
             span.set_attribute(
                 "chaostoolkit.hypothesis.met", state.get("steady_state_met")
             )
@@ -239,13 +271,16 @@ class OLTPRunEventHandler(RunEventHandler):
                     end_on_exit=False,
                 ) as child:
                     activity = probe["activity"]
-                    child.set_attribute("chaostoolkit.activity.name", activity_name)
+                    child.set_attribute(
+                        "chaostoolkit.activity.name", activity_name
+                    )
                     child.set_attribute(
                         "chaostoolkit.activity.background",
                         activity.get("background", False),
                     )
                     child.set_attribute(
-                        "chaostoolkit.activity.output", json.dumps(probe.get("output"))
+                        "chaostoolkit.activity.output",
+                        json.dumps(probe.get("output")),
                     )
                     child.set_attribute(
                         "chaostoolkit.activity.status", probe.get("status")
@@ -258,7 +293,10 @@ class OLTPRunEventHandler(RunEventHandler):
             span.end(end_time=end_ts)
 
     def continuous_hypothesis_completed(
-        self, experiment: Experiment, journal: Journal, exception: Exception = None
+        self,
+        experiment: Experiment,
+        journal: Journal,
+        exception: Exception = None,
     ) -> None:
         self.continuous_span = None
 
@@ -280,7 +318,9 @@ class OLTPRunEventHandler(RunEventHandler):
         self.before_ssh_span = None
         self.current_span = self.root_span
 
-        span.set_attribute("chaostoolkit.hypothesis.met", state.get("steady_state_met"))
+        span.set_attribute(
+            "chaostoolkit.hypothesis.met", state.get("steady_state_met")
+        )
 
         self.before_ssh_stack.close()
 
@@ -300,7 +340,9 @@ class OLTPRunEventHandler(RunEventHandler):
         self.after_ssh_span = None
         self.current_span = self.root_span
 
-        span.set_attribute("chaostoolkit.hypothesis.met", state.get("steady_state_met"))
+        span.set_attribute(
+            "chaostoolkit.hypothesis.met", state.get("steady_state_met")
+        )
 
         self.after_ssh_stack.close()
 
@@ -326,7 +368,9 @@ class OLTPRunEventHandler(RunEventHandler):
         self.rollbacks_span = span
         self.current_span = span
 
-    def rollbacks_completed(self, experiment: Experiment, journal: Journal) -> None:
+    def rollbacks_completed(
+        self, experiment: Experiment, journal: Journal
+    ) -> None:
         self.rollbacks_span = None
         self.current_span = self.root_span
 
@@ -340,10 +384,13 @@ class OLTPRunEventHandler(RunEventHandler):
                 return
 
         stack = ExitStack()
-        span = stack.enter_context(new_span(f"activity: {activity_name}", parent))
+        span = stack.enter_context(
+            new_span(f"activity: {activity_name}", parent)
+        )
         span.set_attribute("chaostoolkit.activity.name", activity_name)
         span.set_attribute(
-            "chaostoolkit.activity.background", activity.get("background", False)
+            "chaostoolkit.activity.background",
+            activity.get("background", False),
         )
 
         stack_id = secrets.token_hex(6)
@@ -460,7 +507,9 @@ def configure_instrumentations(
 
     if trace_request:
         if not HAS_REQUESTS:
-            logger.debug("Cannot trace requests has its missing some dependency")
+            logger.debug(
+                "Cannot trace requests has its missing some dependency"
+            )
         else:
             RequestsInstrumentor().instrument(tracer_provider=provider)
 
@@ -472,7 +521,9 @@ def configure_instrumentations(
 
     if trace_botocore:
         if not HAS_BOTOCORE:
-            logger.debug("Cannot trace botocore has its missing some dependency")
+            logger.debug(
+                "Cannot trace botocore has its missing some dependency"
+            )
         else:
             BotocoreInstrumentor().instrument(tracer_provider=provider)
 

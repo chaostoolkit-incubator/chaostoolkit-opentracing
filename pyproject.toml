@@ -1,0 +1,99 @@
+[project]
+name = "chaostoolkit-opentracing"
+dynamic = ["version"]
+description = "Chaos Toolkit OpenTracing Extension"
+authors = [
+    {name = "Chaos Toolkit", email = "contact@chaostoolkit.org"},
+    {name = "Sylvain Hellegouarch", email = "sh@defuze.org"},
+]
+
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: Freely Distributable",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: Implementation",
+    "Programming Language :: Python :: Implementation :: CPython"
+]
+dependencies = [
+    "chaostoolkit-lib>=1.42.1",
+    "opentracing>=2.4.0",
+    "opentelemetry-api>=1.24.0",
+    "opentelemetry-sdk>=1.24.0",
+    "opentelemetry-semantic-conventions>=0.45b0",
+    "opentelemetry-exporter-otlp-proto-http>=1.24.0",
+    "opentelemetry-instrumentation-httpx>=0.45b0",
+    "opentelemetry-instrumentation-requests>=0.45b0",
+    "opentelemetry-instrumentation-botocore>=0.45b0",
+    "opentelemetry-exporter-gcp-trace>=1.6.0",
+    "opentelemetry-resourcedetector-gcp>=1.6.0a0",
+    "opentelemetry-propagator-gcp>=1.6.0",
+    "opentelemetry-exporter-prometheus>=0.45b0",
+    "opentelemetry-propagator-b3>=1.24.0",
+    "opentelemetry-sdk-extension-aws>=2.0.1",
+    "opentelemetry-propagator-aws-xray>=1.0.1",
+    "opentelemetry-instrumentation-urllib3>=0.45b0",
+]
+requires-python = ">=3.8"
+readme = "README.md"
+license = {text = "Apache-2.0"}
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[tool.pdm.dev-dependencies]
+dev = [
+    "coverage>=7.4.4",
+    "pytest>=8.1.1",
+    "pytest-cov>=5.0.0",
+    "pytest-sugar>=1.0.0",
+    "requests>=2.31.0",
+    "requests-mock>=1.12.1",
+    "ruff>=0.3.5",
+]
+
+[tool.pdm]
+distribution = true
+version = { source = "scm" }
+
+[tool.ruff]
+line-length = 80
+exclude = [
+    ".eggs",
+    ".git",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".venv",
+    ".vscode",
+    "__pypackages__",
+    "build",
+    "dist",
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+docstring-code-format = false
+
+[tool.pdm.scripts]
+lint = {composite = ["ruff check chaostracing/"]}
+format = {composite = ["ruff check --fix chaostracing/", "ruff format chaostracing/"]}
+test = {cmd = "pytest"}
+
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+testpaths = "tests"
+addopts = "-v -rxs --cov chaostracing --cov-report term-missing:skip-covered -p no:warnings"

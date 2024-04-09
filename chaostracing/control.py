@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
+import logging
 import os
 import time
 from typing import Any, Dict, List, NoReturn, Optional
@@ -14,7 +15,6 @@ from chaoslib.types import (
     Run,
     Secrets,
 )
-from logzero import logger
 from opentracing import Span, Tracer
 
 __all__ = [
@@ -31,6 +31,8 @@ __all__ = [
     "after_rollback_control",
     "after_activity_control",
 ]
+
+logger = logging.getLogger("chaostoolkit")
 
 
 def configure_control(
@@ -89,7 +91,9 @@ def before_experiment_control(context: Experiment, **kwargs):
     parent = scope.span if scope else None
 
     name = context.get("title")
-    scope = tracer.start_active_span(name, child_of=parent, finish_on_close=True)
+    scope = tracer.start_active_span(
+        name, child_of=parent, finish_on_close=True
+    )
     scope.span.set_tag("type", "experiment")
     tags = context.get("tags")
     if tags:
@@ -129,13 +133,17 @@ def before_hypothesis_control(context: Hypothesis, **kwargs):
     tracer = opentracing.global_tracer()
     name = context.get("title")
     scope = tracer.scope_manager.active
-    scope = tracer.start_active_span(name, child_of=scope.span, finish_on_close=True)
+    scope = tracer.start_active_span(
+        name, child_of=scope.span, finish_on_close=True
+    )
     scope.span.set_tag("type", "hypothesis")
     if kwargs:
         _log_kv(kwargs, tracer, scope.span)
 
 
-def after_hypothesis_control(context: Hypothesis, state: Dict[str, Any], **kwargs):
+def after_hypothesis_control(
+    context: Hypothesis, state: Dict[str, Any], **kwargs
+):
     """
     Finishes the span created when the steady-state hypothesis began
     """
@@ -222,7 +230,9 @@ def before_activity_control(context: Activity, **kwargs):
     tracer = opentracing.global_tracer()
     scope = tracer.scope_manager.active
     name = context.get("name")
-    scope = tracer.start_active_span(name, child_of=scope.span, finish_on_close=True)
+    scope = tracer.start_active_span(
+        name, child_of=scope.span, finish_on_close=True
+    )
     scope.span.set_tag("type", "activity")
     scope.span.set_tag("activity", context.get("type"))
 
@@ -264,7 +274,9 @@ def after_activity_control(context: Activity, state: Run, **kwargs):
         span.set_tag("status", status)
         if status == "failed":
             span.set_tag("error", True)
-            _log_kv({"event": "error", "stack": state["exception"]}, tracer, span)
+            _log_kv(
+                {"event": "error", "stack": state["exception"]}, tracer, span
+            )
 
         tolerance_met = state.get("tolerance_met")
         if tolerance_met is not None:
@@ -279,7 +291,9 @@ def after_activity_control(context: Activity, state: Run, **kwargs):
 ###############################################################################
 # Internals
 ###############################################################################
-def create_noop_tracer(configuration: Configuration = None, secrets: Secrets = None):
+def create_noop_tracer(
+    configuration: Configuration = None, secrets: Secrets = None
+):
     """
     Create a dummy tracer that will respond to the OpenTracing API but will
     do nothing
@@ -299,7 +313,9 @@ def create_jaeger_tracer(
     from jaeger_client.constants import BAGGAGE_HEADER_PREFIX, TRACE_ID_HEADER
 
     host = kwargs.get("host", configuration.get("tracing_host", "localhost"))
-    port = kwargs.get("port", configuration.get("tracing_port", DEFAULT_REPORTING_PORT))
+    port = kwargs.get(
+        "port", configuration.get("tracing_port", DEFAULT_REPORTING_PORT)
+    )
     tracer_config = Config(
         config={
             "sampler": {
@@ -346,8 +362,15 @@ def create_opentelemetry_tracer(
     exporter = kwargs.get(
         "exporter", configuration.get("tracing_opentelemetry_exporter")
     )
-    if exporter not in ["oltp-grpc", "oltp-http", "jaeger-thrift", "jaeger-grpc"]:
-        logger.debug("Unsupported opentelemetry shim exporter: {}".format("exporter"))
+    if exporter not in [
+        "oltp-grpc",
+        "oltp-http",
+        "jaeger-thrift",
+        "jaeger-grpc",
+    ]:
+        logger.debug(
+            "Unsupported opentelemetry shim exporter: {}".format("exporter")
+        )
         return
 
     # let's create our tracer
@@ -359,7 +382,9 @@ def create_opentelemetry_tracer(
     if exporter == "jaeger-thrift":
         from opentelemetry.exporter.jaeger.thrift import JaegerExporter
 
-        host = kwargs.get("host", configuration.get("tracing_host", "localhost"))
+        host = kwargs.get(
+            "host", configuration.get("tracing_host", "localhost")
+        )
         port = kwargs.get("port", configuration.get("tracing_port", 6831))
         ot_exporter = JaegerExporter(agent_host_name=host, agent_port=port)
     elif exporter == "jaeger-grpc":
@@ -388,7 +413,8 @@ def create_opentelemetry_tracer(
         collector_endpoint = kwargs.get(
             "collector_endpoint",
             configuration.get(
-                "tracing_opentelemetry_collector_endpoint", "http://localhost:4317"
+                "tracing_opentelemetry_collector_endpoint",
+                "http://localhost:4317",
             ),
         )
         insecure = kwargs.get(
@@ -413,17 +439,22 @@ def create_opentelemetry_tracer(
             "collector_endpoint",
             configuration.get(
                 "tracing_opentelemetry_collector_endpoint",
-                os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4317"),
+                os.getenv(
+                    "OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4317"
+                ),
             ),
         )
         headers = kwargs.get(
             "collector_headers",
             configuration.get("tracing_opentelemetry_collector_headers"),
         )
-        ot_exporter = OTLPSpanExporter(endpoint=collector_endpoint, headers=headers)
+        ot_exporter = OTLPSpanExporter(
+            endpoint=collector_endpoint, headers=headers
+        )
 
     baggage = kwargs.get(
-        "baggage_prefix", configuration.get("tracing_opentelemetry_baggage_prefix")
+        "baggage_prefix",
+        configuration.get("tracing_opentelemetry_baggage_prefix"),
     )
     if baggage:
         from opentelemetry.propagate import set_global_textmap

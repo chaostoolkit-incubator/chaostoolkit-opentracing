@@ -16,7 +16,7 @@ Here is an example of what it could look like with the Jaeger backend.
 
 ## Install
 
-This package requires Python 3.6+
+This package requires Python 3.8+
 
 To be used from your experiment, this package must be installed in the Python
 environment where [chaostoolkit][] already lives.
@@ -328,7 +328,7 @@ Use the following configuration:
 To run the tests for the project execute the following:
 
 ```
-$ pytest
+$ pdm run test
 ```
 
 ## Contribute

@@ -7,8 +7,12 @@
 ### Fixed
 
 - Added the ctk activity name in activity spans to enrich the user readability in backend tracing systems. [#5][ctk-opentracing-5]
+- Switched to [PDM][pdm] to manage project
+- Drop black and isort and keep ruff only
+- Drop logzero and use the builtin logging module directly
 
 [ctk-opentracing-5]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/issues/5
+[pdm]: https://pdm-project.org/en/latest
 
 ## [0.16.1][] - 2023-12-18
 
