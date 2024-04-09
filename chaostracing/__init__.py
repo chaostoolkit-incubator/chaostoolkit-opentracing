@@ -1,2 +1,7 @@
 # -*- coding: utf-8 -*-
-__version__ = "0.16.1"
+from importlib.metadata import PackageNotFoundError, version
+
+try:
+    __version__ = version("chaostoolkit-opentracing")
+except PackageNotFoundError:
+    __version__ = "unknown"
