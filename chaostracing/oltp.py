@@ -233,7 +233,10 @@ class OLTPRunEventHandler(RunEventHandler):
                 )
                 activity_name: str = probe["activity"]["name"]
                 with new_span(
-                    f"activity: {activity_name}", span, start_time=child_start_ts, end_on_exit=False
+                    f"activity: {activity_name}",
+                    span,
+                    start_time=child_start_ts,
+                    end_on_exit=False,
                 ) as child:
                     activity = probe["activity"]
                     child.set_attribute("chaostoolkit.activity.name", activity_name)
