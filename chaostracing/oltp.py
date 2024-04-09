@@ -231,11 +231,15 @@ class OLTPRunEventHandler(RunEventHandler):
                     .timestamp()
                     * 1e9
                 )
+                activity_name: str = probe["activity"]["name"]
                 with new_span(
-                    "activity", span, start_time=child_start_ts, end_on_exit=False
+                    f"activity: {activity_name}",
+                    span,
+                    start_time=child_start_ts,
+                    end_on_exit=False,
                 ) as child:
                     activity = probe["activity"]
-                    child.set_attribute("chaostoolkit.activity.name", activity["name"])
+                    child.set_attribute("chaostoolkit.activity.name", activity_name)
                     child.set_attribute(
                         "chaostoolkit.activity.background",
                         activity.get("background", False),
@@ -330,13 +334,14 @@ class OLTPRunEventHandler(RunEventHandler):
 
     def start_activity(self, activity: Activity) -> None:
         parent = self.current_span
+        activity_name: str = activity.get("name")
         if self.continuous_span is not None:
             if "tolerance" in activity:
                 return
 
         stack = ExitStack()
-        span = stack.enter_context(new_span("activity", parent))
-        span.set_attribute("chaostoolkit.activity.name", activity.get("name"))
+        span = stack.enter_context(new_span(f"activity: {activity_name}", parent))
+        span.set_attribute("chaostoolkit.activity.name", activity_name)
         span.set_attribute(
             "chaostoolkit.activity.background", activity.get("background", False)
         )
