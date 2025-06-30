@@ -2,7 +2,16 @@
 
 ## [Unreleased][]
 
-[Unreleased]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.17.0..HEAD
+[Unreleased]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.18.0..HEAD
+
+## [0.18.0][] - 2025-06-30
+
+[0.18.0]: https://github.com/chaostoolkit-incubator/chaostoolkit-opentracing/compare/0.17.0...0.18.0
+
+### Fixed
+
+- Bumped dependencies
+- Only support Python 3.9+ as 3.8 is now EOL
 
 ## [0.17.0][] - 2024-04-09
 
